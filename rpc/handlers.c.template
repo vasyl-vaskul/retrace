@@ -24,8 +24,10 @@ default_[[name]]_precall_handler(struct retrace_endpoint *ep, void *buf, void **
 int
 default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *context)
 {
-#if BACKTRACE
+#if defined(BACKTRACE) || defined(FILEOPEN_[[name]]) || defined(FDOPEN_[[name]])
 	struct display_info *display_info = ep->handle->user_data;
+#endif
+#if BACKTRACE
 	char btbuffer[4096];
 #endif
 [[#has_parameters]]
@@ -34,6 +36,12 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 [[#result]]
 	[[rpctype]]result = *([[rpctype]]*)buf;
 [[/result]]
+
+#ifdef FILEOPEN_[[name]]
+	if (display_info->tracefds) {
+		FILEOPEN_[[name]];
+	}
+#endif
 
 	printf("(%d:%d %d)%.*s[[name]](", ep->pid, ep->thread_num, ep->call_num, ep->call_depth, "\t\t\t\t\t");
 [[#params]]
@@ -48,6 +56,12 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 	DISPLAY_[[type]](ep, result);
 [[/result]]
 	printf("\n");
+
+#ifdef FILECLOSE_[[name]]
+	if (display_info->tracefds) {
+		FILECLOSE_[[name]];
+	}
+#endif
 
 #if BACKTRACE
 	if (display_info->backtrace_functions[RPC_[[name]]]) {

@@ -59,6 +59,7 @@ void retrace_set_handlers(struct retrace_handle *handle,
 void retrace_set_user_data(struct retrace_handle *handle, void *data);
 int retrace_fetch_backtrace(int fd, int depth, char *buf, size_t len);
 int retrace_fetch_string(int fd, const char *address, char *buffer, size_t len);
+int retrace_fetch_fileno(int fd, FILE *s, int *result);
 enum retrace_function_id retrace_function_id(const char *name);
 const char *retrace_function_name(enum retrace_function_id id);
 

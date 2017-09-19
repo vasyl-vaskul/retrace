@@ -26,6 +26,8 @@
 #include "../config.h"
 
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "frontend.h"
 #include "display.h"
@@ -113,4 +115,108 @@ display_string(struct retrace_endpoint *ep, const char *s)
 	} else {
 		printf("%p", s);
 	}
+}
+
+void
+display_fd(struct retrace_endpoint *ep, int fd)
+{
+	struct display_info *di = ep->handle->user_data;
+	const struct fdinfo *fi = NULL;
+
+	if (di->tracefds)
+		fi = get_fdinfo(&di->fdinfos, ep->pid, fd);
+
+	if (fi != NULL)
+		printf("%d:%s", fd, fi->info);
+	else
+		printf("%d", fd);
+}
+
+void
+set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd,
+	const char *info)
+{
+	struct fdinfo *fi;
+
+	fi = (struct fdinfo *)get_fdinfo(infos, pid, fd);
+	if (fi != NULL) {
+		SLIST_REMOVE(infos, fi, fdinfo, next);
+		free(fi);
+	}
+
+	if (info == NULL)
+		return;
+
+	fi = malloc(sizeof(struct fdinfo) + strlen(info) + 1);
+	if (fi != NULL) {
+		fi->fd = fd;
+		fi->pid = pid;
+		fi->info = (char *)&fi[1];
+		strcpy(fi->info, info);
+		SLIST_INSERT_HEAD(infos, fi, next);
+	}
+}
+
+const struct fdinfo *
+get_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd)
+{
+	const struct fdinfo *fi;
+
+	SLIST_FOREACH(fi, infos, next)
+		if (fi->pid == pid && fi->fd == fd)
+			return fi;
+
+	return NULL;
+}
+
+void
+display_stream(struct retrace_endpoint *ep, FILE *stream)
+{
+	struct display_info *di = ep->handle->user_data;
+	const struct streaminfo *si = NULL;
+
+	if (di->tracefds)
+		si = get_streaminfo(&di->streaminfos, ep->pid, stream);
+
+	if (si != NULL)
+		printf("%p:%s", stream, si->info);
+	else
+		printf("%p", stream);
+}
+
+void
+set_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream,
+	const char *info)
+{
+	struct streaminfo *si;
+
+	si = (struct streaminfo *)get_streaminfo(infos, pid, stream);
+	if (si != NULL) {
+		SLIST_REMOVE(infos, si, streaminfo, next);
+		free(si);
+	}
+
+	if (info == NULL)
+		return;
+
+	si = malloc(sizeof(struct streaminfo) + strlen(info) + 1);
+	if (si != NULL) {
+		si->stream = stream;
+		si->pid = pid;
+		si->info = (char *)&si[1];
+		strcpy(si->info, info);
+		SLIST_INSERT_HEAD(infos, si, next);
+	}
+}
+
+const struct streaminfo *
+get_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream)
+{
+	const struct streaminfo *si;
+
+	SLIST_FOREACH(si, infos, next)
+		if (si->pid == pid && si->stream == stream)
+			return si;
+
+	return NULL;
 }

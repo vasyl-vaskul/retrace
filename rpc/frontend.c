@@ -459,6 +459,19 @@ retrace_fetch_memory(int fd, unsigned long int address, void *buffer,
 }
 
 int
+retrace_fetch_fileno(int fd, FILE *s, int *result)
+{
+	struct rpc_fileno_params fp = {s};
+
+	rpc_send_message(fd, RPC_MSG_GET_FILENO, &fp, sizeof(fp));
+
+	if (rpc_recv(fd, result, sizeof(*result)) != -1)
+		return 1;
+
+	return 0;
+}
+
+int
 retrace_inject_errno(int fd, int e)
 {
 	struct rpc_errno_params ep = {e};
