@@ -56,6 +56,7 @@ struct type {
 	{"fd",		"int ",			NULL		},
 	{"file",	"FILE *",		NULL		},
 	{"int",		"int ",			NULL		},
+	{"mode_t",	"mode_t ",		NULL		},
 	{"msghdr",	"struct msghdr *",	NULL		},
 	{"pcvoid",	"const void *",		NULL		},
 	{"pdirent",	"struct dirent **",	NULL		},

@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "frontend.h"
 #include "display.h"
@@ -37,11 +38,14 @@ format_char(char *buf, int c)
 {
 	static const char hex[] = "0123456789ABCDEF";
 
-	if (isprint(c))
+	if (isprint(c) && c != '\\')
 		*(buf++) = c;
 	else {
 		*(buf++) = '\\';
 		switch (c) {
+		case '\\':
+			*(buf++) = '\\';
+			break;
 		case '\0':
 			*(buf++) = '0';
 			break;
@@ -219,4 +223,47 @@ get_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream)
 			return si;
 
 	return NULL;
+}
+
+void
+display_fflags(struct retrace_endpoint *ep, int fflags)
+{
+	static struct flags {
+		int flag;
+		const char *name;
+	} flags[] = {
+		{O_APPEND, "O_APPEND"}, {O_ASYNC, "O_ASYNC"},
+		{O_CLOEXEC, "O_CLOEXEC"}, {O_CREAT, "O_CREAT"},
+		{O_DIRECT, "O_DIRECT"}, {O_DIRECTORY, "O_DIRECTORY"},
+		{O_DSYNC, "O_DSYNC"}, {O_EXCL, "O_EXCL"},
+		{O_LARGEFILE, "O_LARGEFILE"}, {O_NOATIME, "O_NOATIME"},
+		{O_NOCTTY, "O_NOCTTY"}, {O_NOFOLLOW, "O_NOFOLLOW"},
+		{O_NONBLOCK, "O_NONBLOCK"}, {O_NDELAY, "O_NDELAY"},
+		{O_PATH, "O_PATH"}, {O_SYNC, "O_SYNC"},
+		{O_TMPFILE, "O_TMPFILE"}, {O_TRUNC, "O_TRUNC"},
+		{0, NULL} };
+	struct flags *f;
+
+	switch (fflags & O_ACCMODE) {
+	case O_RDONLY:
+		printf("O_RDONLY");
+		break;
+	case O_WRONLY:
+		printf("O_WRONLY");
+		break;
+	case O_RDWR:
+		printf("O_RDWR");
+		break;
+	}
+
+	fflags &= ~O_ACCMODE;
+
+	for (f = flags; f->name != NULL; ++f) {
+		if ((fflags & f->flag) != 0)
+			printf(" | %s", f->name);
+		fflags &= ~f->flag;
+	}
+
+	if (fflags != 0)
+		printf(" | UNKNOWN(%x)", fflags);
 }

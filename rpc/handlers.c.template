@@ -1,4 +1,5 @@
 {{=[[ ]]=}}
+#include "../config.h"
 #include <stdlib.h>
 #include <string.h>
 #include "rpc.h"
@@ -30,6 +31,7 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 #if BACKTRACE
 	char btbuffer[4096];
 #endif
+
 [[#has_parameters]]
 	struct retrace_[[name]]_params *params = (struct retrace_[[name]]_params *)context;
 [[/has_parameters]]
@@ -43,13 +45,23 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 	}
 #endif
 
+#ifdef FDOPEN_[[name]]
+	if (display_info->tracefds) {
+		FDOPEN_[[name]];
+	}
+#endif
+
 	printf("(%d:%d %d)%.*s[[name]](", ep->pid, ep->thread_num, ep->call_num, ep->call_depth, "\t\t\t\t\t");
+#ifndef DISPLAYFN_[[name]]
 [[#params]]
 	DISPLAY_[[type]](ep, params->[[name]]);
 [[^last]]
 	printf(", ");
 [[/last]]
 [[/params]]
+#else
+	DISPLAYFN_[[name]];
+#endif
 	printf(")");
 [[#result]]
 	printf(" = ");
@@ -60,6 +72,12 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 #ifdef FILECLOSE_[[name]]
 	if (display_info->tracefds) {
 		FILECLOSE_[[name]];
+	}
+#endif
+
+#ifdef FDCLOSE_[[name]]
+	if (display_info->tracefds) {
+		FDCLOSE_[[name]];
 	}
 #endif
 
