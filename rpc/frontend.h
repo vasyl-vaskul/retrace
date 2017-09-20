@@ -39,7 +39,7 @@ struct retrace_process_info {
 SLIST_HEAD(process_list, retrace_process_info);
 
 typedef int (*retrace_precall_handler_t)(struct retrace_endpoint *ep, void *buf, void **context);
-typedef int (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, void *buf, void *context);
+typedef int (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, int _errno, void *_result, void *context);
 
 struct retrace_handle {
 	struct retrace_endpoints endpoints;

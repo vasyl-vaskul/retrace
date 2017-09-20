@@ -262,12 +262,14 @@ static void
 handle_postcall(struct retrace_endpoint *ep, void *buf)
 {
 	struct rpc_call_context *ctx;
+	int _errno = *(int *)buf;
+	void *_result = (void *)(((int *)buf) + 1);
 
 	ctx = SLIST_FIRST(&ep->call_stack);
 	SLIST_REMOVE_HEAD(&ep->call_stack, next);
 
 	++ep->call_num;
-	ep->handle->postcall_handlers[ctx->function_id](ep, buf, ctx->context);
+	ep->handle->postcall_handlers[ctx->function_id](ep, _errno, _result, ctx->context);
 
 	rpc_send_message(ep->fd, RPC_MSG_DONE, NULL, 0);
 	--ep->call_depth;

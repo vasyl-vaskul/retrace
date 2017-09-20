@@ -10,7 +10,8 @@ int rpc_get_sockfd(enum retrace_function_id fid);
 int rpc_get_sockfd(void);
 #endif
 void rpc_set_sockfd(long int fd);
-int rpc_send_message(int fd, enum rpc_msg_type msg_type, const void *buf, size_t len);
+int rpc_send_message(int fd, enum rpc_msg_type msg_type, const void *buf, size_t length);
+int rpc_send_result(int fd, const void *result, size_t length);
 int rpc_recv_message(int fd, enum rpc_msg_type *msg_type, void *buf);
 int rpc_handle_message(int fd, enum rpc_msg_type msg_type, void *buf);
 

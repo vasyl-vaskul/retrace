@@ -1,12 +1,15 @@
 function close int
 parameter fd fd
+errno -1
 
 function closedir int
 parameter dirp dir
+errno -1
 
-function creat fd
+function creat int
 parameter pathname cstring
 parameter mode mode_t
+errno -1
 
 function dirfd fd
 parameter dirp dir
@@ -65,16 +68,18 @@ parameter s pvoid
 parameter c char
 parameter n size_t
 
-function open fd
+function open int
 parameter pathname cstring
 parameter flags int
 parameter mode mode_t
+errno -1
 
-function openat fd
+function openat int
 parameter dirfd int
 parameter pathname cstring
 parameter flags int
 parameter mode mode_t
+errno -1
 
 function opendir dir
 parameter name cstring
@@ -102,6 +107,7 @@ parameter sockfd fd
 parameter buf pvoid
 parameter len size_t
 parameter flags msgflags
+errno -1
 
 function recvfrom ssize_t
 parameter sockfd fd
@@ -110,11 +116,13 @@ parameter len size_t
 parameter flags msgflags
 parameter src_addr sockaddr
 parameter addrlen psocklen_t
+errno -1
 
 function recvmsg ssize_t
 parameter sockfd fd
 parameter msg msghdr
 parameter flags msgflags
+errno -1
 
 function send ssize_t
 parameter sockfd fd

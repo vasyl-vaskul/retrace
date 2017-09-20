@@ -43,11 +43,12 @@ static struct option options[] = {
 	{"backtrace-depth", required_argument, 0, 'd'},
 #endif
 	{"show-strings", required_argument, 0, 's'},
+	{"show-structs", no_argument, 0, 't'},
 	{"trace-fds", no_argument, 0, 'F'},
 	{NULL, 0, 0, 0}
 };
 
-#define STDOPTS "+f:s:hvF"
+#define STDOPTS "+f:s:hvFt"
 
 #if BACKTRACE
 #define BTOPTS "b:d:"
@@ -72,12 +73,14 @@ static void usage(const char *argv0, int exitval)
 	    "function names to trace (defaults to all supported functions)\n"
 	    "  -s --show-strings=n	Show the first n characters of "
 	    "string parameters\n"
+	    "  -t --show-structs	Show additional information for "
+	    "structs\n"
 	    "  -b --backtrace-functions=LIST	LIST is a comma separated "
 	    "list of function names for which to show a stach trace\n"
 	    "  -d --backtrace-depth=n	Show n frames when displaying stack "
 	    "traces (default 4)\n"
-	    "  -F --trace-fds	Show extended information for parameters "
-	    "that relate to file descriptors\n"
+	    "  -F --trace-fds	Show extended information for FILE * and"
+	    "file descriptor parameters\n"
 	    "  -h --help	Show this help\n"
 	    "  -v --version	Show version information\n", argv0);
 	exit(exitval);
@@ -153,6 +156,9 @@ int main(int argc, char **argv)
 			break;
 		case 'F':
 			display_info.tracefds = 1;
+			break;
+		case 't':
+			display_info.expand_structs = 1;
 			break;
 		default:
 			usage(argv[0], EXIT_FAILURE);

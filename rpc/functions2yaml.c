@@ -97,6 +97,7 @@ struct function {
 	struct param_list params;
 	const char *va_fn;
 	const char *guard;
+	const char *errno;
 };
 
 STAILQ_HEAD(function_list, function);
@@ -145,6 +146,8 @@ void yaml(struct function_list *fns)
 			printf("  result: true\n");
 		if (fn->guard != NULL)
 			printf("  guard: \"%s\"\n", fn->guard);
+		if (fn->errno != NULL)
+			printf("  errno: \"%s\"\n", fn->errno);
 
 		if (!TAILQ_EMPTY(&(fn->params))) {
 			printf("  has_parameters: true\n");
@@ -288,8 +291,11 @@ int main(void)
 			fn->va_fn = _strdup(strtok(NULL, " "));
 			if (fn->va_fn == NULL)
 				errexit(1, "Keyword 'variadic' must be followed the name of a fixed param version at line %d.", line);
-		} else if (strcmp(tok, "guard") == 0)
+		} else if (strcmp(tok, "guard") == 0) {
 			fn->guard = _strdup(strtok(NULL, "\n"));
+		} else if (strcmp(tok, "errno") == 0) {
+			fn->errno = _strdup(strtok(NULL, "\n"));
+		}
 	}
 
 	if (fn)

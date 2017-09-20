@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "frontend.h"
 #include "display.h"
@@ -325,4 +326,140 @@ display_msgflags(struct retrace_endpoint *ep, int flags)
 		printf(fmt, "UNKNOWN");
 		printf("(%x)", flags);
 	}
+}
+
+void
+display_errno(int _errno)
+{
+	static struct flag_name flag_names[] = {
+		{E2BIG,	"E2BIG"},
+		{EACCES,	"EACCES"},
+		{EADDRINUSE,	"EADDRINUSE"},
+		{EADDRNOTAVAIL,	"EADDRNOTAVAIL"},
+		{EAFNOSUPPORT,	"EAFNOSUPPORT"},
+		{EAGAIN,	"EAGAIN"},
+		{EALREADY,	"EALREADY"},
+		{EBADE,	"EBADE"},
+		{EBADF,	"EBADF"},
+		{EBADFD,	"EBADFD"},
+		{EBADMSG,	"EBADMSG"},
+		{EBADR,	"EBADR"},
+		{EBADRQC,	"EBADRQC"},
+		{EBADSLT,	"EBADSLT"},
+		{EBUSY,	"EBUSY"},
+		{ECANCELED,	"ECANCELED"},
+		{ECHILD,	"ECHILD"},
+		{ECHRNG,	"ECHRNG"},
+		{ECOMM,	"ECOMM"},
+		{ECONNABORTED,	"ECONNABORTED"},
+		{ECONNREFUSED,	"ECONNREFUSED"},
+		{ECONNRESET,	"ECONNRESET"},
+		{EDEADLK,	"EDEADLK"},
+		{EDEADLOCK,	"EDEADLOCK"},
+		{EDESTADDRREQ,	"EDESTADDRREQ"},
+		{EDOM,	"EDOM"},
+		{EDQUOT,	"EDQUOT"},
+		{EEXIST,	"EEXIST"},
+		{EFAULT,	"EFAULT"},
+		{EFBIG,	"EFBIG"},
+		{EHOSTDOWN,	"EHOSTDOWN"},
+		{EHOSTUNREACH,	"EHOSTUNREACH"},
+		{EIDRM,	"EIDRM"},
+		{EILSEQ,	"EILSEQ"},
+		{EINPROGRESS,	"EINPROGRESS"},
+		{EINTR,	"EINTR"},
+		{EINVAL,	"EINVAL"},
+		{EIO,	"EIO"},
+		{EISCONN,	"EISCONN"},
+		{EISDIR,	"EISDIR"},
+		{EISNAM,	"EISNAM"},
+		{EKEYEXPIRED,	"EKEYEXPIRED"},
+		{EKEYREJECTED,	"EKEYREJECTED"},
+		{EKEYREVOKED,	"EKEYREVOKED"},
+		{EL2HLT,	"EL2HLT"},
+		{EL2NSYNC,	"EL2NSYNC"},
+		{EL3HLT,	"EL3HLT"},
+		{EL3RST,	"EL3RST"},
+		{ELIBACC,	"ELIBACC"},
+		{ELIBBAD,	"ELIBBAD"},
+		{ELIBMAX,	"ELIBMAX"},
+		{ELIBSCN,	"ELIBSCN"},
+		{ELIBEXEC,	"ELIBEXEC"},
+		{ELOOP,	"ELOOP"},
+		{EMEDIUMTYPE,	"EMEDIUMTYPE"},
+		{EMFILE,	"EMFILE"},
+		{EMLINK,	"EMLINK"},
+		{EMSGSIZE,	"EMSGSIZE"},
+		{EMULTIHOP,	"EMULTIHOP"},
+		{ENAMETOOLONG,	"ENAMETOOLONG"},
+		{ENETDOWN,	"ENETDOWN"},
+		{ENETRESET,	"ENETRESET"},
+		{ENETUNREACH,	"ENETUNREACH"},
+		{ENFILE,	"ENFILE"},
+		{ENOBUFS,	"ENOBUFS"},
+		{ENODATA,	"ENODATA"},
+		{ENODEV,	"ENODEV"},
+		{ENOENT,	"ENOENT"},
+		{ENOEXEC,	"ENOEXEC"},
+		{ENOKEY,	"ENOKEY"},
+		{ENOLCK,	"ENOLCK"},
+		{ENOLINK,	"ENOLINK"},
+		{ENOMEDIUM,	"ENOMEDIUM"},
+		{ENOMEM,	"ENOMEM"},
+		{ENOMSG,	"ENOMSG"},
+		{ENONET,	"ENONET"},
+		{ENOPKG,	"ENOPKG"},
+		{ENOPROTOOPT,	"ENOPROTOOPT"},
+		{ENOSPC,	"ENOSPC"},
+		{ENOSR,	"ENOSR"},
+		{ENOSTR,	"ENOSTR"},
+		{ENOSYS,	"ENOSYS"},
+		{ENOTBLK,	"ENOTBLK"},
+		{ENOTCONN,	"ENOTCONN"},
+		{ENOTDIR,	"ENOTDIR"},
+		{ENOTEMPTY,	"ENOTEMPTY"},
+		{ENOTSOCK,	"ENOTSOCK"},
+		{ENOTSUP,	"ENOTSUP"},
+		{ENOTTY,	"ENOTTY"},
+		{ENOTUNIQ,	"ENOTUNIQ"},
+		{ENXIO,	"ENXIO"},
+		{EOPNOTSUPP,	"EOPNOTSUPP"},
+		{EOVERFLOW,	"EOVERFLOW"},
+		{EPERM,	"EPERM"},
+		{EPFNOSUPPORT,	"EPFNOSUPPORT"},
+		{EPIPE,	"EPIPE"},
+		{EPROTO,	"EPROTO"},
+		{EPROTONOSUPPORT,	"EPROTONOSUPPORT"},
+		{EPROTOTYPE,	"EPROTOTYPE"},
+		{ERANGE,	"ERANGE"},
+		{EREMCHG,	"EREMCHG"},
+		{EREMOTE,	"EREMOTE"},
+		{EREMOTEIO,	"EREMOTEIO"},
+		{ERESTART,	"ERESTART"},
+		{EROFS,	"EROFS"},
+		{ESHUTDOWN,	"ESHUTDOWN"},
+		{ESPIPE,	"ESPIPE"},
+		{ESOCKTNOSUPPORT,	"ESOCKTNOSUPPORT"},
+		{ESRCH,	"ESRCH"},
+		{ESTALE,	"ESTALE"},
+		{ESTRPIPE,	"ESTRPIPE"},
+		{ETIME,	"ETIME"},
+		{ETIMEDOUT,	"ETIMEDOUT"},
+		{ETXTBSY,	"ETXTBSY"},
+		{EUCLEAN,	"EUCLEAN"},
+		{EUNATCH,	"EUNATCH"},
+		{EUSERS,	"EUSERS"},
+		{EWOULDBLOCK,	"EWOULDBLOCK"},
+		{EXDEV,	"EXDEV"},
+		{EXFULL,	"EXFULL"},
+		{0,	NULL} };
+	struct flag_name *f;
+
+	for (f = flag_names; f->name; ++f) {
+		if (f->flag == _errno) {
+			printf(" [%s:%d])", f->name, _errno);
+			return;
+		}
+	}
+	printf(" [errno:%d]", _errno);
 }

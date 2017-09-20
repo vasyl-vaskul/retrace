@@ -23,7 +23,7 @@ default_[[name]]_precall_handler(struct retrace_endpoint *ep, void *buf, void **
 }
 
 int
-default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *context)
+default_[[name]]_postcall_handler(struct retrace_endpoint *ep, int _errno, void *_result, void *context)
 {
 #if defined(BACKTRACE) || defined(FILEOPEN_[[name]]) || defined(FDOPEN_[[name]])
 	struct display_info *display_info = ep->handle->user_data;
@@ -36,7 +36,7 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 	struct retrace_[[name]]_params *params = (struct retrace_[[name]]_params *)context;
 [[/has_parameters]]
 [[#result]]
-	[[rpctype]]result = *([[rpctype]]*)buf;
+	[[rpctype]]result = *([[rpctype]]*)_result;
 [[/result]]
 
 #ifdef FILEOPEN_[[name]]
@@ -66,6 +66,10 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, void *buf, void *
 [[#result]]
 	printf(" = ");
 	DISPLAY_[[type]](ep, result);
+[[#errno]]
+	if (result == [[errno]])
+		display_errno(_errno);
+[[/errno]]
 [[/result]]
 	printf("\n");
 

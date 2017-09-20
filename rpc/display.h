@@ -64,6 +64,8 @@ struct display_info {
 };
 
 void *display_buffer(void *buffer, size_t length);
+void display_char(int c);
+void display_errno(int _errno);
 void display_string(struct retrace_endpoint *ep, const char *s);
 void display_fflags(struct retrace_endpoint *ep, int flags);
 void display_msgflags(struct retrace_endpoint *ep, int flags);
