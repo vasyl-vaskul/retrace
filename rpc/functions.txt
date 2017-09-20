@@ -97,21 +97,43 @@ function realloc pvoid
 parameter ptr pvoid
 parameter size size_t
 
+function recv ssize_t
+parameter sockfd fd
+parameter buf pvoid
+parameter len size_t
+parameter flags int
+
+function recvfrom ssize_t
+parameter sockfd fd
+parameter buf pvoid
+parameter len size_t
+parameter flags int
+parameter src_addr sockaddr
+parameter addrlen psocklen_t
+
 function recvmsg ssize_t
-parameter sockfd int
+parameter sockfd fd
 parameter msg msghdr
 parameter flags int
 
 function send ssize_t
-parameter sockfd int
+parameter sockfd fd
 parameter buf pcvoid
 parameter len size_t
 parameter flags int
 
 function sendmsg ssize_t
-parameter sockfd int
+parameter sockfd fd
 parameter msg cmsghdr
 parameter flags int
+
+function sendto ssize_t
+parameter sockfd fd
+parameter buf pcvoid
+parameter len size_t
+parameter flags int
+parameter dest_addr csockaddr
+parameter addrlen socklen_t
 
 function socketpair int
 parameter domain int

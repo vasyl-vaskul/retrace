@@ -6,6 +6,7 @@
 #define DISPLAY_char(ep, c)	if (c) printf("'%c'", c); else printf("'\\0'");
 #define DISPLAY_cmsghdr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_cstring(ep, p)	display_string(ep, p)
+#define DISPLAY_csockaddr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_dir(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_dirent(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_file(ep, p)	display_stream(ep, p)
@@ -19,11 +20,15 @@
 #define DISPLAY_pdirent(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_pint(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_psize_t(ep, p)	DISPLAY_pvoid(ep, p)
+#define DISPLAY_psocklen_t(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_pstring(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_pvoid(ep, p)	printf("%p", (p))
 #define DISPLAY_size_t(ep, i)	DISPLAY_ulong(ep, i)
+#define DISPLAY_sockaddr(ep, p)	DISPLAY_pvoid(ep, p)
+#define DISPLAY_socklen_t(ep, i)	DISPLAY_uint(ep, i)
 #define DISPLAY_ssize_t(ep, i)	DISPLAY_long(ep, i)
 #define DISPLAY_string(ep, p)	display_string(ep, p)
+#define DISPLAY_uint(ep, i)	printf("%u", (i))
 #define DISPLAY_ulong(ep, i)	printf("%lu", (i))
 #define DISPLAY_va_list(ep, ap)	printf("ap")
 
