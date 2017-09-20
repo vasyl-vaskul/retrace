@@ -101,37 +101,37 @@ function recv ssize_t
 parameter sockfd fd
 parameter buf pvoid
 parameter len size_t
-parameter flags int
+parameter flags msgflags
 
 function recvfrom ssize_t
 parameter sockfd fd
 parameter buf pvoid
 parameter len size_t
-parameter flags int
+parameter flags msgflags
 parameter src_addr sockaddr
 parameter addrlen psocklen_t
 
 function recvmsg ssize_t
 parameter sockfd fd
 parameter msg msghdr
-parameter flags int
+parameter flags msgflags
 
 function send ssize_t
 parameter sockfd fd
 parameter buf pcvoid
 parameter len size_t
-parameter flags int
+parameter flags msgflags
 
 function sendmsg ssize_t
 parameter sockfd fd
 parameter msg cmsghdr
-parameter flags int
+parameter flags msgflags
 
 function sendto ssize_t
 parameter sockfd fd
 parameter buf pcvoid
 parameter len size_t
-parameter flags int
+parameter flags msgflags
 parameter dest_addr csockaddr
 parameter addrlen socklen_t
 

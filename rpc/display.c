@@ -33,6 +33,11 @@
 #include "frontend.h"
 #include "display.h"
 
+struct flag_name {
+	int flag;
+	const char *name;
+};
+
 static char *
 format_char(char *buf, int c)
 {
@@ -119,6 +124,16 @@ display_string(struct retrace_endpoint *ep, const char *s)
 	} else {
 		printf("%p", s);
 	}
+}
+
+void
+display_char(int c)
+{
+	char buf[16], *e;
+
+	e = format_char(buf, c);
+	*e = '\0';
+	printf("'%s'", buf);
 }
 
 void
@@ -226,25 +241,31 @@ get_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream)
 }
 
 void
-display_fflags(struct retrace_endpoint *ep, int fflags)
+display_fflags(struct retrace_endpoint *ep, int flags)
 {
-	static struct flags {
-		int flag;
-		const char *name;
-	} flags[] = {
-		{O_APPEND, "O_APPEND"}, {O_ASYNC, "O_ASYNC"},
-		{O_CLOEXEC, "O_CLOEXEC"}, {O_CREAT, "O_CREAT"},
-		{O_DIRECT, "O_DIRECT"}, {O_DIRECTORY, "O_DIRECTORY"},
-		{O_DSYNC, "O_DSYNC"}, {O_EXCL, "O_EXCL"},
-		{O_LARGEFILE, "O_LARGEFILE"}, {O_NOATIME, "O_NOATIME"},
-		{O_NOCTTY, "O_NOCTTY"}, {O_NOFOLLOW, "O_NOFOLLOW"},
-		{O_NONBLOCK, "O_NONBLOCK"}, {O_NDELAY, "O_NDELAY"},
-		{O_PATH, "O_PATH"}, {O_SYNC, "O_SYNC"},
-		{O_TMPFILE, "O_TMPFILE"}, {O_TRUNC, "O_TRUNC"},
-		{0, NULL} };
-	struct flags *f;
+	static struct flag_name flag_names[] = {
+		{O_APPEND,	"O_APPEND"},
+		{O_ASYNC,	"O_ASYNC"},
+		{O_CLOEXEC,	"O_CLOEXEC"},
+		{O_CREAT,	"O_CREAT"},
+		{O_DIRECT,	"O_DIRECT"},
+		{O_DIRECTORY,	"O_DIRECTORY"},
+		{O_DSYNC,	"O_DSYNC"},
+		{O_EXCL,	"O_EXCL"},
+		{O_LARGEFILE,	"O_LARGEFILE"},
+		{O_NOATIME,	"O_NOATIME"},
+		{O_NOCTTY,	"O_NOCTTY"},
+		{O_NOFOLLOW,	"O_NOFOLLOW"},
+		{O_NONBLOCK,	"O_NONBLOCK"},
+		{O_NDELAY,	"O_NDELAY"},
+		{O_PATH,	"O_PATH"},
+		{O_SYNC,	"O_SYNC"},
+		{O_TMPFILE,	"O_TMPFILE"},
+		{O_TRUNC,	"O_TRUNC"},
+		{0,	NULL} };
+	struct flag_name *f;
 
-	switch (fflags & O_ACCMODE) {
+	switch (flags & O_ACCMODE) {
 	case O_RDONLY:
 		printf("O_RDONLY");
 		break;
@@ -256,14 +277,52 @@ display_fflags(struct retrace_endpoint *ep, int fflags)
 		break;
 	}
 
-	fflags &= ~O_ACCMODE;
+	flags &= ~O_ACCMODE;
 
-	for (f = flags; f->name != NULL; ++f) {
-		if ((fflags & f->flag) != 0)
+	for (f = flag_names; f->name != NULL; ++f) {
+		if ((flags & f->flag) != 0)
 			printf(" | %s", f->name);
-		fflags &= ~f->flag;
+		flags &= ~f->flag;
 	}
 
-	if (fflags != 0)
-		printf(" | UNKNOWN(%x)", fflags);
+	if (flags != 0)
+		printf(" | UNKNOWN(%x)", flags);
+}
+
+void
+display_msgflags(struct retrace_endpoint *ep, int flags)
+{
+	static struct flag_name flag_names[] = {
+		{MSG_CONFIRM,	"MSG_CONFIRM"},
+		{MSG_DONTROUTE,	"MSG_DONTROUTE"},
+		{MSG_DONTWAIT,	"MSG_DONTWAIT"},
+		{MSG_EOR,	"MSG_EOR"},
+		{MSG_MORE,	"MSG_MORE"},
+		{MSG_NOSIGNAL,	"MSG_NOSIGNAL"},
+		{MSG_OOB,	"MSG_OOB"},
+		{MSG_CMSG_CLOEXEC,	"MSG_CMSG_CLOEXEC"},
+		{MSG_DONTWAIT,	"MSG_DONTWAIT"},
+		{MSG_ERRQUEUE,	"MSG_ERRQUEUE"},
+		{MSG_PEEK,	"MSG_PEEK"},
+		{MSG_TRUNC,	"MSG_TRUNC"},
+		{MSG_WAITALL,	"MSG_WAITALL"},
+		{0,	NULL} };
+	struct flag_name *f;
+	const char *fmt = "%s";
+
+	if (flags == 0)
+		printf("0");
+	else {
+		for (f = flag_names; f->name != NULL; ++f) {
+			if ((flags & f->flag) != 0) {
+				printf(fmt, f->name);
+				fmt = " | %s";
+			}
+		}
+	}
+
+	if (flags != 0) {
+		printf(fmt, "UNKNOWN");
+		printf("(%x)", flags);
+	}
 }

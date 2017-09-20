@@ -3,7 +3,7 @@
 
 #include <sys/queue.h>
 
-#define DISPLAY_char(ep, c)	if (c) printf("'%c'", c); else printf("'\\0'");
+#define DISPLAY_char(ep, c)	display_char(c);
 #define DISPLAY_cmsghdr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_cstring(ep, p)	display_string(ep, p)
 #define DISPLAY_csockaddr(ep, p)	DISPLAY_pvoid(ep, p)
@@ -14,6 +14,7 @@
 #define DISPLAY_int(ep, i)	printf("%d", (i))
 #define DISPLAY_long(ep, i)	printf("%ld", (i))
 #define DISPLAY_mode_t(ep, m)	printf("0%.3o", m)
+#define DISPLAY_msgflags(ep, i)	display_msgflags(ep, i)
 #define DISPLAY_msghdr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_pid_t(ep, i)	DISPLAY_int(ep, i)
 #define DISPLAY_pcvoid(ep, p)	DISPLAY_pvoid(ep, p)
@@ -56,6 +57,7 @@ struct display_info {
 	int backtrace_depth;
 #endif
 	int expand_strings;
+	int expand_structs;
 	int tracefds;
 	struct fdinfo_h fdinfos;
 	struct streaminfo_h streaminfos;
@@ -64,6 +66,7 @@ struct display_info {
 void *display_buffer(void *buffer, size_t length);
 void display_string(struct retrace_endpoint *ep, const char *s);
 void display_fflags(struct retrace_endpoint *ep, int flags);
+void display_msgflags(struct retrace_endpoint *ep, int flags);
 
 void display_fd(struct retrace_endpoint *ep, int fd);
 void set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd, const char *info);

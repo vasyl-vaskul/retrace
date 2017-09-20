@@ -59,6 +59,7 @@ struct type {
 	{"int",		"int ",			NULL		},
 	{"mode_t",	"mode_t ",		NULL		},
 	{"msghdr",	"struct msghdr *",	NULL		},
+	{"msgflags",	"int ",			NULL		},
 	{"pcvoid",	"const void *",		NULL		},
 	{"pdirent",	"struct dirent **",	NULL		},
 	{"pid_t",	"pid_t ",		NULL		},
