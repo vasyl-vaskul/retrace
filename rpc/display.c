@@ -463,3 +463,99 @@ display_errno(int _errno)
 	}
 	printf(" [errno:%d]", _errno);
 }
+
+void
+display_domain(int domain)
+{
+	static struct flag_name flag_names[] = {
+		{AF_UNIX,	"AF_UNIX"},
+		{AF_LOCAL,	"AF_LOCAL"},
+		{AF_INET,	"AF_INET"},
+		{AF_INET6,	"AF_INET6"},
+		{AF_IPX,	"AF_IPX"},
+		{AF_NETLINK,	"AF_NETLINK"},
+		{AF_X25,	"AF_X25"},
+		{AF_AX25,	"AF_AX25"},
+		{AF_ATMPVC,	"AF_ATMPVC"},
+		{AF_APPLETALK,	"AF_APPLETALK"},
+		{AF_PACKET,	"AF_PACKET"},
+		{AF_ALG,	"AF_ALG"},
+		{0,	NULL} };
+	struct flag_name *f;
+
+	for (f = flag_names; f->name; ++f) {
+		if (f->flag == domain) {
+			printf("%s", f->name);
+			return;
+		}
+	}
+	printf("unknown:%d", domain);
+}
+
+void
+display_protocol(int protocol)
+{
+	/* from /etc/protocols */
+	/* TODO: read from file at startup */
+	static struct flag_name flag_names[] = {
+		{0,	"IP"},
+		{0,	"HOPOPT"},
+		{1,	"ICMP"},
+		{2,	"IGMP"},
+		{3,	"GGP"},
+		{4,	"IP-ENCAP"},
+		{5,	"ST"},
+		{6,	"TCP"},
+		{8,	"EGP"},
+		{9,	"IGP"},
+		{12,	"PUP"},
+		{17,	"UDP"},
+		{20,	"HMP"},
+		{22,	"XNS-IDP"},
+		{27,	"RDP"},
+		{29,	"ISO-TP4"},
+		{33,	"DCCP"},
+		{36,	"XTP"},
+		{37,	"DDP"},
+		{38,	"IDPR-CMTP"},
+		{41,	"IPv6"},
+		{43,	"IPv6-Route"},
+		{44,	"IPv6-Frag"},
+		{45,	"IDRP"},
+		{46,	"RSVP"},
+		{47,	"GRE"},
+		{0,	NULL} };
+	struct flag_name *f;
+
+	for (f = flag_names; f->name; ++f) {
+		if (f->flag == protocol) {
+			printf("%s", f->name);
+			return;
+		}
+	}
+	printf("unknown:%d", protocol);
+}
+
+void
+display_socktype(int socktype)
+{
+	static struct flag_name flag_names[] = {
+		{SOCK_STREAM,	"SOCK_STREAM"},
+		{SOCK_DGRAM,	"SOCK_DGRAM"},
+		{SOCK_SEQPACKET,	"SOCK_SEQPACKET"},
+		{SOCK_RAW,	"SOCK_RAW"},
+		{SOCK_RDM,	"SOCK_RDM"},
+		{SOCK_PACKET,	"SOCK_PACKET"},
+		{SOCK_NONBLOCK,	"SOCK_NONBLOCK"},
+		{SOCK_CLOEXEC,	"SOCK_CLOEXEC"},
+		{0,	NULL} };
+	struct flag_name *f;
+
+	for (f = flag_names; f->name; ++f) {
+		if (f->flag == socktype) {
+			printf("%s", f->name);
+			return;
+		}
+	}
+	printf("unknown:%d", socktype);
+}

@@ -143,11 +143,18 @@ parameter flags msgflags
 parameter dest_addr csockaddr
 parameter addrlen socklen_t
 
+function socket int
+parameter domain domain
+parameter type socktype
+parameter protocol protocol
+errno -1
+
 function socketpair int
-parameter domain int
-parameter type int
-parameter protocol int
+parameter domain domain
+parameter type socktype
+parameter protocol protocol
 parameter sv pint
+errno -1
 
 function sprintf int
 parameter str string
