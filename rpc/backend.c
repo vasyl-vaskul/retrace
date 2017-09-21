@@ -223,6 +223,24 @@ rpc_send_message(int fd, enum rpc_msg_type msg_type, const void *buf, size_t len
 }
 
 int
+rpc_send_init(int fd, enum retrace_function_id fid, void *params, size_t length)
+{
+	static const enum rpc_msg_type type = RPC_MSG_CALL_INIT;
+	struct iovec iov[] = {
+	    {(enum rpc_msg_type *)&type, sizeof(type)},
+	    {&fid, sizeof(fid)},
+	    {params, length} };
+	struct msghdr msg = {NULL, 0, iov, 3, NULL, 0, 0};
+	ssize_t err;
+
+	do {
+		err = real_sendmsg(fd, &msg, 0);
+	} while (err == -1 && errno == EINTR);
+
+	return (err != -1 ? 1 : 0);
+}
+
+int
 rpc_send_result(int fd, const void *result, size_t length)
 {
 	static const enum rpc_msg_type type = RPC_MSG_CALL_RESULT;

@@ -246,6 +246,7 @@ handle_precall(struct retrace_endpoint *ep, void *buf)
 
 	++ep->call_depth;
 	function_id = *(enum retrace_function_id *)buf;
+	buf = (enum retrace_function_id *)buf + 1;
 	if (ep->handle->precall_handlers[function_id](ep, buf, &context)) {
 		ctx = malloc(sizeof(struct rpc_call_context));
 		ctx->function_id = function_id;

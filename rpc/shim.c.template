@@ -32,8 +32,8 @@ int trace_functions[RPC_FUNCTION_COUNT];
 	enum rpc_msg_type _msg_type;
 	int _postcall = 0, _fd, _errno;
 	char _buf[RPC_MSG_LEN_MAX];
-	struct retrace_[[name]]_params _params = {RPC_[[name]][[#params]], [[name]][[/params]]};
 [[#has_parameters]]
+	struct retrace_[[name]]_params _params = {[[#params]][[name]][[^last]], [[/last]][[/params]]};
 	struct retrace_[[name]]_params *_buf_params = (struct retrace_[[name]]_params *)_buf;
 [[/has_parameters]]
 [[#variadic]]
@@ -64,7 +64,12 @@ int trace_functions[RPC_FUNCTION_COUNT];
 		return[[#result]] _result[[/result]];
 	}
 
-	if (!rpc_send_message(_fd, RPC_MSG_CALL_INIT, &_params, sizeof(_params)))
+[[#has_parameters]]
+	if (!rpc_send_init(_fd, RPC_[[name]], &_params, sizeof(_params)))
+[[/has_parameters]]
+[[^has_parameters]]
+	if (!rpc_send_init(_fd, RPC_[[name]], NULL, 0))
+[[/has_parameters]]
 		goto rpc_fail;
 
 	while (rpc_recv_message(_fd, &_msg_type, _buf)) {
