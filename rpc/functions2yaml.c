@@ -57,6 +57,7 @@ struct type {
 	{"domain",	"int ",			NULL		},
 	{"fd",		"int ",			NULL		},
 	{"file",	"FILE *",		NULL		},
+	{"fileflags",	"int ",			NULL		},
 	{"int",		"int ",			NULL		},
 	{"mode_t",	"mode_t ",		NULL		},
 	{"msghdr",	"struct msghdr *",	NULL		},

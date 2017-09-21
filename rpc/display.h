@@ -7,10 +7,11 @@
 #define DISPLAY_cmsghdr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_cstring(ep, p)	display_string(ep, p)
 #define DISPLAY_csockaddr(ep, p)	DISPLAY_pvoid(ep, p)
-#define DISPLAY_dir(ep, p)	DISPLAY_pvoid(ep, p)
+#define DISPLAY_dir(ep, p)	display_dir(ep, p)
 #define DISPLAY_dirent(ep, i)	DISPLAY_pvoid(ep, i)
 #define DISPLAY_domain(ep, p)	display_domain(p)
 #define DISPLAY_file(ep, p)	display_stream(ep, p)
+#define DISPLAY_fileflags(ep, i)	display_fflags(i)
 #define DISPLAY_fd(ep, i)	display_fd(ep, i)
 #define DISPLAY_int(ep, i)	printf("%d", (i))
 #define DISPLAY_long(ep, i)	printf("%ld", (i))
@@ -54,6 +55,15 @@ struct streaminfo {
 
 SLIST_HEAD(streaminfo_h, streaminfo);
 
+struct dirinfo {
+	SLIST_ENTRY(dirinfo) next;
+	pid_t pid;
+	DIR *dir;
+	char *info;
+};
+
+SLIST_HEAD(dirinfo_h, dirinfo);
+
 struct display_info {
 #if BACKTRACE
 	int backtrace_functions[RPC_FUNCTION_COUNT];
@@ -64,6 +74,7 @@ struct display_info {
 	int tracefds;
 	struct fdinfo_h fdinfos;
 	struct streaminfo_h streaminfos;
+	struct dirinfo_h dirinfos;
 };
 
 void *display_buffer(void *buffer, size_t length);
@@ -79,6 +90,12 @@ void display_msgflags(struct retrace_endpoint *ep, int flags);
 void display_fd(struct retrace_endpoint *ep, int fd);
 void set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd, const char *info);
 const struct fdinfo *get_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd);
+
+void display_dir(struct retrace_endpoint *ep, DIR *dir);
+void set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir,
+	const char *info);
+const struct dirinfo *get_dirinfo(struct dirinfo_h *infos, pid_t pid,
+	DIR *dir);
 
 void display_stream(struct retrace_endpoint *ep, FILE *s);
 void set_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream,

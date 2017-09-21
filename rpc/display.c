@@ -242,6 +242,57 @@ get_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream)
 }
 
 void
+display_dir(struct retrace_endpoint *ep, DIR *dir)
+{
+	struct display_info *di = ep->handle->user_data;
+	const struct dirinfo *dirinfo = NULL;
+
+	if (di->tracefds)
+		dirinfo = get_dirinfo(&di->dirinfos, ep->pid, dir);
+
+	if (dirinfo != NULL)
+		printf("%p:%s", dir, dirinfo->info);
+	else
+		printf("%p", dir);
+}
+
+void
+set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir, const char *info)
+{
+	struct dirinfo *di;
+
+	di = (struct dirinfo *)get_dirinfo(infos, pid, dir);
+	if (di != NULL) {
+		SLIST_REMOVE(infos, di, dirinfo, next);
+		free(di);
+	}
+
+	if (info == NULL)
+		return;
+
+	di = malloc(sizeof(struct dirinfo) + strlen(info) + 1);
+	if (di != NULL) {
+		di->dir = dir;
+		di->pid = pid;
+		di->info = (char *)&di[1];
+		strcpy(di->info, info);
+		SLIST_INSERT_HEAD(infos, di, next);
+	}
+}
+
+const struct dirinfo *
+get_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir)
+{
+	const struct dirinfo *di;
+
+	SLIST_FOREACH(di, infos, next)
+		if (di->pid == pid && di->dir == dir)
+			return di;
+
+	return NULL;
+}
+
+void
 display_fflags(struct retrace_endpoint *ep, int flags)
 {
 	static struct flag_name flag_names[] = {

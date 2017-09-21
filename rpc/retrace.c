@@ -122,6 +122,7 @@ int main(int argc, char **argv)
 #endif
 	SLIST_INIT(&display_info.fdinfos);
 	SLIST_INIT(&display_info.streaminfos);
+	SLIST_INIT(&display_info.dirinfos);
 
 	while (1) {
 		c = getopt_long(argc, argv, STDOPTS BTOPTS, options, NULL);

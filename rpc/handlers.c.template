@@ -40,14 +40,20 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, int _errno, void 
 [[/result]]
 
 #ifdef FILEOPEN_[[name]]
-	if (display_info->tracefds) {
+	if (display_info->tracefds && result != [[& errno]]) {
 		FILEOPEN_[[name]];
 	}
 #endif
 
 #ifdef FDOPEN_[[name]]
-	if (display_info->tracefds) {
+	if (display_info->tracefds && result != [[& errno]]) {
 		FDOPEN_[[name]];
+	}
+#endif
+
+#ifdef DIROPEN_[[name]]
+	if (display_info->tracefds && result != [[& errno]]) {
+		DIROPEN_[[name]];
 	}
 #endif
 
@@ -67,21 +73,27 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, int _errno, void 
 	printf(" = ");
 	DISPLAY_[[type]](ep, result);
 [[#errno]]
-	if (result == [[errno]])
+	if (result == [[& errno]])
 		display_errno(_errno);
 [[/errno]]
 [[/result]]
 	printf("\n");
 
 #ifdef FILECLOSE_[[name]]
-	if (display_info->tracefds) {
+	if (display_info->tracefds && result != [[& errno]]) {
 		FILECLOSE_[[name]];
 	}
 #endif
 
 #ifdef FDCLOSE_[[name]]
-	if (display_info->tracefds) {
+	if (display_info->tracefds && result != [[& errno]]) {
 		FDCLOSE_[[name]];
+	}
+#endif
+
+#ifdef DIRCLOSE_[[name]]
+	if (display_info->tracefds && result != [[& errno]]) {
+		DIRCLOSE_[[name]];
 	}
 #endif
 
