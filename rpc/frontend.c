@@ -238,42 +238,60 @@ rpc_send(int fd, const void *buf, size_t len)
 }
 
 static void
-handle_precall(struct retrace_endpoint *ep, void *buf)
+init_call_context(struct retrace_endpoint *ep, const void *buf, size_t len)
 {
-	struct rpc_call_context *ctx;
-	void *context = NULL;
-	enum retrace_function_id function_id;
+	struct retrace_call_context *context;
 
-	++ep->call_depth;
-	function_id = *(enum retrace_function_id *)buf;
-	buf = (enum retrace_function_id *)buf + 1;
-	if (ep->handle->precall_handlers[function_id](ep, buf, &context)) {
-		ctx = malloc(sizeof(struct rpc_call_context));
-		ctx->function_id = function_id;
-		ctx->context = context;
-		SLIST_INSERT_HEAD(&ep->call_stack, ctx, next);
-		rpc_send_message(ep->fd, RPC_MSG_DO_CALL, NULL, 0);
-	} else {
-		rpc_send_message(ep->fd, RPC_MSG_DONE, NULL, 0);
-		--ep->call_depth;
+	context = malloc(sizeof(struct retrace_call_context));
+	context->function_id = *(enum retrace_function_id *)buf;
+	len -= sizeof(enum retrace_function_id);
+	if (len > 0) {
+		buf = (enum retrace_function_id *)buf + 1;
+		context->params = malloc(len);
+		memcpy(context->params, buf, len);
 	}
+	SLIST_INSERT_HEAD(&ep->call_stack, context, next);
+	++ep->call_depth;
 }
 
 static void
-handle_postcall(struct retrace_endpoint *ep, void *buf)
+update_call_context(struct retrace_endpoint *ep, const void *buf, size_t len)
 {
-	struct rpc_call_context *ctx;
-	int _errno = *(int *)buf;
-	void *_result = (void *)(((int *)buf) + 1);
+	struct retrace_call_context *context;
 
-	ctx = SLIST_FIRST(&ep->call_stack);
+	context = SLIST_FIRST(&ep->call_stack);
+	context->_errno = *(int *)buf;
+	context->result = (void *)(((int *)buf) + 1);
+}
+
+static void
+free_call_context(struct retrace_endpoint *ep)
+{
+	struct retrace_call_context *context;
+
+	context = SLIST_FIRST(&ep->call_stack);
 	SLIST_REMOVE_HEAD(&ep->call_stack, next);
-
-	++ep->call_num;
-	ep->handle->postcall_handlers[ctx->function_id](ep, _errno, _result, ctx->context);
-
-	rpc_send_message(ep->fd, RPC_MSG_DONE, NULL, 0);
+	free(context);
 	--ep->call_depth;
+	++ep->call_num;
+}
+
+static int
+handle_precall(struct retrace_endpoint *ep)
+{
+	struct retrace_call_context *context;
+
+	context = SLIST_FIRST(&ep->call_stack);
+	return (ep->handle->precall_handlers[context->function_id](ep, context));
+}
+
+static void
+handle_postcall(struct retrace_endpoint *ep)
+{
+	struct retrace_call_context *context;
+
+	context = SLIST_FIRST(&ep->call_stack);
+	ep->handle->postcall_handlers[context->function_id](ep, context);
 }
 
 void
@@ -307,24 +325,38 @@ retrace_trace(struct retrace_handle *handle)
 		}
 
 		SLIST_FOREACH(endpoint, &handle->endpoints, next) {
+			ssize_t len;
+
 			if (endpoint->fd == -1)
 				continue;
 
 			if (!FD_ISSET(endpoint->fd, &readfds))
 				continue;
 
-			if (!rpc_recv_message(endpoint->fd, &msg_type, buf)) {
+			len = rpc_recv_message(endpoint->fd, &msg_type, buf);
+			if (len <= 0) {
 				FD_CLR(endpoint->fd, &readfds);
 				close(endpoint->fd);
 				endpoint->fd = -1;
 				continue;
 			}
 
-			if (msg_type == RPC_MSG_CALL_INIT)
-				handle_precall(endpoint, buf);
-			else if (msg_type == RPC_MSG_CALL_RESULT)
-				handle_postcall(endpoint, buf);
-			else
+			if (msg_type == RPC_MSG_CALL_INIT) {
+				init_call_context(endpoint, buf, len);
+
+				if (handle_precall(endpoint))
+					rpc_send_message(endpoint->fd, RPC_MSG_DO_CALL, NULL, 0);
+				else {
+					handle_postcall(endpoint);
+					rpc_send_message(endpoint->fd, RPC_MSG_DONE, NULL, 0);
+					free_call_context(endpoint);
+				}
+			} else if (msg_type == RPC_MSG_CALL_RESULT) {
+				update_call_context(endpoint, buf, len);
+				handle_postcall(endpoint);
+				rpc_send_message(endpoint->fd, RPC_MSG_DONE, NULL, 0);
+				free_call_context(endpoint);
+			} else
 				assert(0);
 		}
 
@@ -350,7 +382,7 @@ rpc_send_message(int fd, enum rpc_msg_type msg_type, const void *buf, size_t len
 	return (result != -1 ? 1 : 0);
 }
 
-int
+ssize_t
 rpc_recv_message(int fd, enum rpc_msg_type *msg_type, void *buf)
 {
 	struct iovec iov[] = {
@@ -362,7 +394,7 @@ rpc_recv_message(int fd, enum rpc_msg_type *msg_type, void *buf)
 		result = recvmsg(fd, &msg, 0);
 	} while (result == -1 && errno == EINTR);
 
-	return (result > 0 ? 1 : 0);
+	return result;
 }
 
 int

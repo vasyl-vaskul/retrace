@@ -9,13 +9,16 @@
 
 #define RETRACE_TRACE 0x01
 
-struct rpc_call_context {
-	SLIST_ENTRY(rpc_call_context) next;
+struct retrace_call_context {
+	SLIST_ENTRY(retrace_call_context) next;
 	enum retrace_function_id function_id;
-	void *context;
+	void *params;
+	void *result;
+	int _errno;
+	void *user_data;
 };
 
-SLIST_HEAD(rpc_call_stack, rpc_call_context);
+SLIST_HEAD(retrace_call_stack, retrace_call_context);
 
 struct retrace_endpoint {
 	SLIST_ENTRY(retrace_endpoint) next;
@@ -24,7 +27,7 @@ struct retrace_endpoint {
 	int thread_num;
 	unsigned int call_num;
 	unsigned int call_depth;
-	struct rpc_call_stack call_stack;
+	struct retrace_call_stack call_stack;
 	struct retrace_handle *handle;
 };
 
@@ -38,8 +41,8 @@ struct retrace_process_info {
 
 SLIST_HEAD(process_list, retrace_process_info);
 
-typedef int (*retrace_precall_handler_t)(struct retrace_endpoint *ep, void *buf, void **context);
-typedef int (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, int _errno, void *_result, void *context);
+typedef int (*retrace_precall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
+typedef int (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
 
 struct retrace_handle {
 	struct retrace_endpoints endpoints;
@@ -65,7 +68,7 @@ const char *retrace_function_name(enum retrace_function_id id);
 
 int rpc_send_message(int fd, enum rpc_msg_type msg_type, const void *buf, size_t len);
 int rpc_send(int fd, const void *buf, size_t len);
-int rpc_recv_message(int fd, enum rpc_msg_type *msg_type, void *buf);
+ssize_t rpc_recv_message(int fd, enum rpc_msg_type *msg_type, void *buf);
 int rpc_recv(int fd, void *buf, size_t len);
 int rpc_recv_string(int fd, char *buffer, size_t len);
 
