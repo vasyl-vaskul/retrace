@@ -3,8 +3,7 @@
 
 #include <fcntl.h>
 
-void get_handlers(retrace_precall_handler_t *pre,
-    retrace_postcall_handler_t *post);
+void set_default_handlers(struct retrace_handle *handle);
 
 #define DISPLAYFN_open do {						\
 	display_string(ep, params->pathname);				\

@@ -177,6 +177,11 @@ retrace_start(char *const argv[], const int *trace_flags)
 		SLIST_INIT(&handle->endpoints);
 		SLIST_INIT(&handle->processes);
 
+		for (i = 0; i < RPC_FUNCTION_COUNT; i++) {
+			SLIST_INIT(&handle->precall_handlers[i]);
+			SLIST_INIT(&handle->postcall_handlers[i]);
+		}
+
 		handle->control_fd = sv[0];
 
 		return handle;
@@ -184,13 +189,37 @@ retrace_start(char *const argv[], const int *trace_flags)
 }
 
 void
-retrace_set_handlers(struct retrace_handle *handle,
-	retrace_precall_handler_t *pre, retrace_postcall_handler_t *post)
+retrace_add_precall_handler(
+	struct retrace_handle *handle,
+	enum retrace_function_id fid,
+	retrace_precall_handler_t fn)
 {
-	memcpy(handle->precall_handlers, pre,
-	    sizeof(handle->precall_handlers));
-	memcpy(handle->postcall_handlers, post,
-	    sizeof(handle->postcall_handlers));
+	struct retrace_precall_handler *handler;
+	struct retrace_precall_handlers *handlers;
+
+	handler = malloc(sizeof(struct retrace_precall_handler));
+	handlers = &handle->precall_handlers[fid];
+	if (handler) {
+		handler->fn = fn;
+		SLIST_INSERT_HEAD(handlers, handler, next);
+	}
+}
+
+void
+retrace_add_postcall_handler(
+	struct retrace_handle *handle,
+	enum retrace_function_id fid,
+	retrace_postcall_handler_t fn)
+{
+	struct retrace_postcall_handler *handler;
+	struct retrace_postcall_handlers *handlers;
+
+	handler = malloc(sizeof(struct retrace_postcall_handler));
+	handlers = &handle->postcall_handlers[fid];
+	if (handler) {
+		handler->fn = fn;
+		SLIST_INSERT_HEAD(handlers, handler, next);
+	}
 }
 
 void
@@ -280,18 +309,31 @@ static int
 handle_precall(struct retrace_endpoint *ep)
 {
 	struct retrace_call_context *context;
+	struct retrace_precall_handlers *handlers;
+	struct retrace_precall_handler *handler;
 
 	context = SLIST_FIRST(&ep->call_stack);
-	return (ep->handle->precall_handlers[context->function_id](ep, context));
+	handlers = &ep->handle->precall_handlers[context->function_id];
+
+	SLIST_FOREACH(handler, handlers, next)
+		if (handler->fn(ep, context) == 0)
+			return 0;
+
+	return 1;
 }
 
 static void
 handle_postcall(struct retrace_endpoint *ep)
 {
 	struct retrace_call_context *context;
+	struct retrace_postcall_handlers *handlers;
+	struct retrace_postcall_handler *handler;
 
 	context = SLIST_FIRST(&ep->call_stack);
-	ep->handle->postcall_handlers[context->function_id](ep, context);
+	handlers = &ep->handle->postcall_handlers[context->function_id];
+
+	SLIST_FOREACH(handler, handlers, next)
+		handler->fn(ep, context);
 }
 
 void

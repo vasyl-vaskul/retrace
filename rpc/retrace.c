@@ -111,9 +111,6 @@ int main(int argc, char **argv)
 	int i, c, opt_funcs = 0,
 	    trace_flags[RPC_FUNCTION_COUNT];
 
-	retrace_precall_handler_t pre[RPC_FUNCTION_COUNT];
-	retrace_postcall_handler_t post[RPC_FUNCTION_COUNT];
-
 	memset(trace_flags, 0, sizeof(trace_flags));
 	memset(&display_info, 0, sizeof(display_info));
 
@@ -172,9 +169,7 @@ int main(int argc, char **argv)
 
 	trace_handle = retrace_start(&argv[optind], trace_flags);
 
-	get_handlers(pre, post);
-
-	retrace_set_handlers(trace_handle, pre, post);
+	set_default_handlers(trace_handle);
 
 	retrace_set_user_data(trace_handle, &display_info);
 

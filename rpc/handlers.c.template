@@ -100,10 +100,10 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_ca
 }
 [[/functions]]
 
-void get_handlers(retrace_precall_handler_t *pre, retrace_postcall_handler_t *post)
+void set_default_handlers(struct retrace_handle *handle)
 {
 	[[#functions]]
-	pre[RPC_[[name]]] = default_[[name]]_precall_handler;
-	post[RPC_[[name]]] = default_[[name]]_postcall_handler;
+	retrace_add_precall_handler(handle, RPC_[[name]], default_[[name]]_precall_handler);
+	retrace_add_postcall_handler(handle, RPC_[[name]], default_[[name]]_postcall_handler);
 	[[/functions]]
 };

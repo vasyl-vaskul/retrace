@@ -44,12 +44,26 @@ SLIST_HEAD(process_list, retrace_process_info);
 typedef int (*retrace_precall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
 typedef int (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
 
+struct retrace_precall_handler {
+	SLIST_ENTRY(retrace_precall_handler) next;
+	retrace_precall_handler_t fn;
+};
+
+SLIST_HEAD(retrace_precall_handlers, retrace_precall_handler);
+
+struct retrace_postcall_handler {
+	SLIST_ENTRY(retrace_postcall_handler) next;
+	retrace_postcall_handler_t fn;
+};
+
+SLIST_HEAD(retrace_postcall_handlers, retrace_postcall_handler);
+
 struct retrace_handle {
 	struct retrace_endpoints endpoints;
 	struct process_list processes;
 	int control_fd;
-	retrace_precall_handler_t precall_handlers[RPC_FUNCTION_COUNT];
-	retrace_postcall_handler_t postcall_handlers[RPC_FUNCTION_COUNT];
+	struct retrace_precall_handlers precall_handlers[RPC_FUNCTION_COUNT];
+	struct retrace_postcall_handlers postcall_handlers[RPC_FUNCTION_COUNT];
 	void *user_data;
 };
 
@@ -57,8 +71,10 @@ struct retrace_handle *retrace_start(char *const argv[], const int *trace_flags)
 void retrace_close(struct retrace_handle *handle);
 void retrace_trace(struct retrace_handle *handle);
 void retrace_handle_call(const struct retrace_endpoint *ep);
-void retrace_set_handlers(struct retrace_handle *handle,
-	retrace_precall_handler_t *pre, retrace_postcall_handler_t *post);
+void retrace_add_precall_handler(struct retrace_handle *handle,
+	enum retrace_function_id fid, retrace_precall_handler_t fn);
+void retrace_add_postcall_handler(struct retrace_handle *handle,
+	enum retrace_function_id fid, retrace_postcall_handler_t fn);
 void retrace_set_user_data(struct retrace_handle *handle, void *data);
 int retrace_fetch_backtrace(int fd, int depth, char *buf, size_t len);
 int retrace_fetch_string(int fd, const char *address, char *buffer, size_t len);
