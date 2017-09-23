@@ -33,6 +33,7 @@
 #include "frontend.h"
 #include "handlers.h"
 #include "display.h"
+#include "tracefd.h"
 
 static struct option options[] = {
 	{"help", no_argument, 0, 'h'},
@@ -107,19 +108,16 @@ static void set_trace_flags(int *flags, int setflag, char *funcs)
 int main(int argc, char **argv)
 {
 	struct retrace_handle *trace_handle;
-	struct display_info display_info;
-	int i, c, opt_funcs = 0,
-	    trace_flags[RPC_FUNCTION_COUNT];
+	struct handler_info handler_info;
+	int i, c, opt_funcs = 0, trace_flags[RPC_FUNCTION_COUNT],
+	    tracefds = 0;
 
 	memset(trace_flags, 0, sizeof(trace_flags));
-	memset(&display_info, 0, sizeof(display_info));
+	memset(&handler_info, 0, sizeof(handler_info));
 
 #if BACKTRACE
-	display_info.backtrace_depth = 4;
+	handler_info.backtrace_depth = 4;
 #endif
-	SLIST_INIT(&display_info.fdinfos);
-	SLIST_INIT(&display_info.streaminfos);
-	SLIST_INIT(&display_info.dirinfos);
 
 	while (1) {
 		c = getopt_long(argc, argv, STDOPTS BTOPTS, options, NULL);
@@ -136,14 +134,14 @@ int main(int argc, char **argv)
 		case 'b':
 			opt_funcs = 1;
 			set_trace_flags(trace_flags, RETRACE_TRACE, optarg);
-			set_trace_flags(display_info.backtrace_functions, 0x01, optarg);
+			set_trace_flags(handler_info.backtrace_functions, 0x01, optarg);
 			break;
 		case 'd':
-			display_info.backtrace_depth = atoi(optarg);
+			handler_info.backtrace_depth = atoi(optarg);
 			break;
 #endif
 		case 's':
-			display_info.expand_strings = atoi(optarg);
+			handler_info.expand_strings = atoi(optarg);
 			break;
 		case 'h':
 			usage(argv[0], EXIT_SUCCESS);
@@ -153,10 +151,10 @@ int main(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 			break;
 		case 'F':
-			display_info.tracefds = 1;
+			tracefds = 1;
 			break;
 		case 't':
-			display_info.expand_structs = 1;
+			handler_info.expand_structs = 1;
 			break;
 		default:
 			usage(argv[0], EXIT_FAILURE);
@@ -169,9 +167,12 @@ int main(int argc, char **argv)
 
 	trace_handle = retrace_start(&argv[optind], trace_flags);
 
-	set_default_handlers(trace_handle);
+	retrace_set_user_data(trace_handle, &handler_info);
 
-	retrace_set_user_data(trace_handle, &display_info);
+	if (tracefds)
+		init_tracefd_handlers(trace_handle);
+
+	set_default_handlers(trace_handle);
 
 	retrace_trace(trace_handle);
 

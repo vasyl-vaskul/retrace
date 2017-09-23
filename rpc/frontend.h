@@ -12,8 +12,8 @@
 struct retrace_call_context {
 	SLIST_ENTRY(retrace_call_context) next;
 	enum retrace_function_id function_id;
-	void *params;
-	void *result;
+	char params[128];
+	char result[16];
 	int _errno;
 	void *user_data;
 };
@@ -42,7 +42,7 @@ struct retrace_process_info {
 SLIST_HEAD(process_list, retrace_process_info);
 
 typedef int (*retrace_precall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
-typedef int (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
+typedef void (*retrace_postcall_handler_t)(struct retrace_endpoint *ep, struct retrace_call_context *context);
 
 struct retrace_precall_handler {
 	SLIST_ENTRY(retrace_precall_handler) next;

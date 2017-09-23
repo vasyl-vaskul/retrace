@@ -33,6 +33,8 @@
 
 #include "frontend.h"
 #include "display.h"
+#include "tracefd.h"
+#include "handlers.h"
 
 struct flag_name {
 	int flag;
@@ -140,11 +142,11 @@ display_char(int c)
 void
 display_fd(struct retrace_endpoint *ep, int fd)
 {
-	struct display_info *di = ep->handle->user_data;
+	struct handler_info *hi = ep->handle->user_data;
 	const struct fdinfo *fi = NULL;
 
-	if (di->tracefds)
-		fi = get_fdinfo(&di->fdinfos, ep->pid, fd);
+	if (hi->tracefds)
+		fi = get_fdinfo(&hi->tracefd_info.fdinfos, ep->pid, fd);
 
 	if (fi != NULL)
 		printf("%d:%s", fd, fi->info);
@@ -153,50 +155,14 @@ display_fd(struct retrace_endpoint *ep, int fd)
 }
 
 void
-set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd,
-	const char *info)
-{
-	struct fdinfo *fi;
-
-	fi = (struct fdinfo *)get_fdinfo(infos, pid, fd);
-	if (fi != NULL) {
-		SLIST_REMOVE(infos, fi, fdinfo, next);
-		free(fi);
-	}
-
-	if (info == NULL)
-		return;
-
-	fi = malloc(sizeof(struct fdinfo) + strlen(info) + 1);
-	if (fi != NULL) {
-		fi->fd = fd;
-		fi->pid = pid;
-		fi->info = (char *)&fi[1];
-		strcpy(fi->info, info);
-		SLIST_INSERT_HEAD(infos, fi, next);
-	}
-}
-
-const struct fdinfo *
-get_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd)
-{
-	const struct fdinfo *fi;
-
-	SLIST_FOREACH(fi, infos, next)
-		if (fi->pid == pid && fi->fd == fd)
-			return fi;
-
-	return NULL;
-}
-
-void
 display_stream(struct retrace_endpoint *ep, FILE *stream)
 {
-	struct display_info *di = ep->handle->user_data;
+	struct handler_info *hi = ep->handle->user_data;
 	const struct streaminfo *si = NULL;
 
-	if (di->tracefds)
-		si = get_streaminfo(&di->streaminfos, ep->pid, stream);
+	if (hi->tracefds)
+		si = get_streaminfo(&hi->tracefd_info.streaminfos,
+		    ep->pid, stream);
 
 	if (si != NULL)
 		printf("%p:%s", stream, si->info);
@@ -205,91 +171,19 @@ display_stream(struct retrace_endpoint *ep, FILE *stream)
 }
 
 void
-set_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream,
-	const char *info)
-{
-	struct streaminfo *si;
-
-	si = (struct streaminfo *)get_streaminfo(infos, pid, stream);
-	if (si != NULL) {
-		SLIST_REMOVE(infos, si, streaminfo, next);
-		free(si);
-	}
-
-	if (info == NULL)
-		return;
-
-	si = malloc(sizeof(struct streaminfo) + strlen(info) + 1);
-	if (si != NULL) {
-		si->stream = stream;
-		si->pid = pid;
-		si->info = (char *)&si[1];
-		strcpy(si->info, info);
-		SLIST_INSERT_HEAD(infos, si, next);
-	}
-}
-
-const struct streaminfo *
-get_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream)
-{
-	const struct streaminfo *si;
-
-	SLIST_FOREACH(si, infos, next)
-		if (si->pid == pid && si->stream == stream)
-			return si;
-
-	return NULL;
-}
-
-void
 display_dir(struct retrace_endpoint *ep, DIR *dir)
 {
-	struct display_info *di = ep->handle->user_data;
+	struct handler_info *hi = ep->handle->user_data;
 	const struct dirinfo *dirinfo = NULL;
 
-	if (di->tracefds)
-		dirinfo = get_dirinfo(&di->dirinfos, ep->pid, dir);
+	if (hi->tracefds)
+		dirinfo = get_dirinfo(&hi->tracefd_info.dirinfos,
+		    ep->pid, dir);
 
 	if (dirinfo != NULL)
 		printf("%p:%s", dir, dirinfo->info);
 	else
 		printf("%p", dir);
-}
-
-void
-set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir, const char *info)
-{
-	struct dirinfo *di;
-
-	di = (struct dirinfo *)get_dirinfo(infos, pid, dir);
-	if (di != NULL) {
-		SLIST_REMOVE(infos, di, dirinfo, next);
-		free(di);
-	}
-
-	if (info == NULL)
-		return;
-
-	di = malloc(sizeof(struct dirinfo) + strlen(info) + 1);
-	if (di != NULL) {
-		di->dir = dir;
-		di->pid = pid;
-		di->info = (char *)&di[1];
-		strcpy(di->info, info);
-		SLIST_INSERT_HEAD(infos, di, next);
-	}
-}
-
-const struct dirinfo *
-get_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir)
-{
-	const struct dirinfo *di;
-
-	SLIST_FOREACH(di, infos, next)
-		if (di->pid == pid && di->dir == dir)
-			return di;
-
-	return NULL;
 }
 
 void

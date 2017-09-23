@@ -14,40 +14,22 @@ default_[[name]]_precall_handler(struct retrace_endpoint *ep, struct retrace_cal
 	return 1;
 }
 
-int
+void
 default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_call_context *context)
 {
 #if defined(BACKTRACE) || defined(FILEOPEN_[[name]]) || defined(FDOPEN_[[name]])
-	struct display_info *display_info = ep->handle->user_data;
+	struct handler_info *handler_info = ep->handle->user_data;
 #endif
 #if BACKTRACE
 	char btbuffer[4096];
 #endif
 
 [[#has_parameters]]
-	struct retrace_[[name]]_params *params = (struct retrace_[[name]]_params *)context->params;
+	struct retrace_[[name]]_params *params = (struct retrace_[[name]]_params *)&context->params;
 [[/has_parameters]]
 [[#result]]
 	[[rpctype]]result = *([[rpctype]]*)context->result;
 [[/result]]
-
-#ifdef FILEOPEN_[[name]]
-	if (display_info->tracefds && result != [[& errno]]) {
-		FILEOPEN_[[name]];
-	}
-#endif
-
-#ifdef FDOPEN_[[name]]
-	if (display_info->tracefds && result != [[& errno]]) {
-		FDOPEN_[[name]];
-	}
-#endif
-
-#ifdef DIROPEN_[[name]]
-	if (display_info->tracefds && result != [[& errno]]) {
-		DIROPEN_[[name]];
-	}
-#endif
 
 	printf("(%d:%d %d)%.*s[[name]](", ep->pid, ep->thread_num, ep->call_num, ep->call_depth, "\t\t\t\t\t");
 #ifndef DISPLAYFN_[[name]]
@@ -71,32 +53,12 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_ca
 [[/result]]
 	printf("\n");
 
-#ifdef FILECLOSE_[[name]]
-	if (display_info->tracefds && result != [[& errno]]) {
-		FILECLOSE_[[name]];
-	}
-#endif
-
-#ifdef FDCLOSE_[[name]]
-	if (display_info->tracefds && result != [[& errno]]) {
-		FDCLOSE_[[name]];
-	}
-#endif
-
-#ifdef DIRCLOSE_[[name]]
-	if (display_info->tracefds && result != [[& errno]]) {
-		DIRCLOSE_[[name]];
-	}
-#endif
-
 #if BACKTRACE
-	if (display_info->backtrace_functions[RPC_[[name]]]) {
-		if (retrace_fetch_backtrace(ep->fd, display_info->backtrace_depth, btbuffer, sizeof(btbuffer)))
+	if (handler_info->backtrace_functions[RPC_[[name]]]) {
+		if (retrace_fetch_backtrace(ep->fd, handler_info->backtrace_depth, btbuffer, sizeof(btbuffer)))
 			printf("%s", btbuffer);
 	}
 #endif
-
-	return 0;
 }
 [[/functions]]
 

@@ -271,12 +271,13 @@ init_call_context(struct retrace_endpoint *ep, const void *buf, size_t len)
 {
 	struct retrace_call_context *context;
 
+	assert(len < sizeof(enum retrace_function_id) + sizeof(context->params));
+
 	context = malloc(sizeof(struct retrace_call_context));
 	context->function_id = *(enum retrace_function_id *)buf;
 	len -= sizeof(enum retrace_function_id);
 	if (len > 0) {
 		buf = (enum retrace_function_id *)buf + 1;
-		context->params = malloc(len);
 		memcpy(context->params, buf, len);
 	}
 	SLIST_INSERT_HEAD(&ep->call_stack, context, next);
@@ -288,9 +289,11 @@ update_call_context(struct retrace_endpoint *ep, const void *buf, size_t len)
 {
 	struct retrace_call_context *context;
 
+	assert(len < sizeof(int) + sizeof(context->result));
+
 	context = SLIST_FIRST(&ep->call_stack);
 	context->_errno = *(int *)buf;
-	context->result = (void *)(((int *)buf) + 1);
+	memcpy(context->result, (((int *)buf) + 1), len - sizeof(int));
 }
 
 static void
