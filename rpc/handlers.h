@@ -8,8 +8,9 @@
 void set_default_handlers(struct retrace_handle *handle);
 
 struct handler_info {
-	int backtrace_functions[RPC_FUNCTION_COUNT];
+#if BACKTRACE
 	int backtrace_depth;
+#endif
 	int expand_strings;
 	int expand_structs;
 	int tracefds;

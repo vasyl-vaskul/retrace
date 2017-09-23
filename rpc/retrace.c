@@ -34,6 +34,9 @@
 #include "handlers.h"
 #include "display.h"
 #include "tracefd.h"
+#if BACKTRACE
+#include "backtrace.h"
+#endif
 
 static struct option options[] = {
 	{"help", no_argument, 0, 'h'},
@@ -111,11 +114,15 @@ int main(int argc, char **argv)
 	struct handler_info handler_info;
 	int i, c, opt_funcs = 0, trace_flags[RPC_FUNCTION_COUNT],
 	    tracefds = 0;
+#if BACKTRACE
+	int backtrace_funcs[RPC_FUNCTION_COUNT];
+#endif
 
 	memset(trace_flags, 0, sizeof(trace_flags));
 	memset(&handler_info, 0, sizeof(handler_info));
 
 #if BACKTRACE
+	memset(backtrace_funcs, 0, sizeof(backtrace_funcs));
 	handler_info.backtrace_depth = 4;
 #endif
 
@@ -134,7 +141,7 @@ int main(int argc, char **argv)
 		case 'b':
 			opt_funcs = 1;
 			set_trace_flags(trace_flags, RETRACE_TRACE, optarg);
-			set_trace_flags(handler_info.backtrace_functions, 0x01, optarg);
+			set_trace_flags(backtrace_funcs, 0x01, optarg);
 			break;
 		case 'd':
 			handler_info.backtrace_depth = atoi(optarg);
@@ -171,6 +178,10 @@ int main(int argc, char **argv)
 
 	if (tracefds)
 		init_tracefd_handlers(trace_handle);
+
+	#if BACKTRACE
+		init_backtrace_handlers(trace_handle, backtrace_funcs);
+	#endif
 
 	set_default_handlers(trace_handle);
 

@@ -8,22 +8,9 @@
 #include "display.h"
 [[#functions]]
 
-int
-default_[[name]]_precall_handler(struct retrace_endpoint *ep, struct retrace_call_context *context)
-{
-	return 1;
-}
-
 void
 default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_call_context *context)
 {
-#if defined(BACKTRACE) || defined(FILEOPEN_[[name]]) || defined(FDOPEN_[[name]])
-	struct handler_info *handler_info = ep->handle->user_data;
-#endif
-#if BACKTRACE
-	char btbuffer[4096];
-#endif
-
 [[#has_parameters]]
 	struct retrace_[[name]]_params *params = (struct retrace_[[name]]_params *)&context->params;
 [[/has_parameters]]
@@ -52,20 +39,12 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_ca
 [[/errno]]
 [[/result]]
 	printf("\n");
-
-#if BACKTRACE
-	if (handler_info->backtrace_functions[RPC_[[name]]]) {
-		if (retrace_fetch_backtrace(ep->fd, handler_info->backtrace_depth, btbuffer, sizeof(btbuffer)))
-			printf("%s", btbuffer);
-	}
-#endif
 }
 [[/functions]]
 
 void set_default_handlers(struct retrace_handle *handle)
 {
 	[[#functions]]
-	retrace_add_precall_handler(handle, RPC_[[name]], default_[[name]]_precall_handler);
 	retrace_add_postcall_handler(handle, RPC_[[name]], default_[[name]]_postcall_handler);
 	[[/functions]]
 };
