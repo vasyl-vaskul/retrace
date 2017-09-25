@@ -27,6 +27,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "frontend.h"
 #include "tracefd.h"

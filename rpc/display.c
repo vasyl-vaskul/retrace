@@ -25,11 +25,15 @@
 
 #include "../config.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "frontend.h"
 #include "display.h"
@@ -503,4 +507,48 @@ display_socktype(int socktype)
 		}
 	}
 	printf("unknown:%d", socktype);
+}
+
+void
+display_sockaddr(struct retrace_endpoint *ep, const struct sockaddr* addr, socklen_t len)
+{
+	struct display_info *di = ep->handle->user_data;
+	struct sockaddr_storage raddr;
+	int x;
+	char buf[256];
+
+	assert (sizeof(struct sockaddr_un) <= sizeof(raddr));
+
+	if (!di->expand_structs || addr == NULL) {
+		DISPLAY_pvoid(ep, addr);
+		return;
+	}
+
+	if (len > sizeof(raddr))
+		len = sizeof(raddr);
+
+	x = retrace_fetch_memory(ep->fd, addr, &raddr, len);
+	if (x == 0) {
+		DISPLAY_pvoid(ep, addr);
+		return;
+	}
+
+	if (raddr.ss_family == AF_UNIX) {
+		struct sockaddr_un *sa = (struct sockaddr_un *)&raddr;
+		printf("{AF_UNIX, %*s}", (int)sizeof(sa->sun_path),
+		    sa->sun_path);
+	} else if (raddr.ss_family == AF_INET) {
+		struct sockaddr_in *sa = (struct sockaddr_in *)&raddr;
+		printf("{AF_INET, %d, %s}", sa->sin_port,
+		    inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf)));
+	} else if (raddr.ss_family == AF_INET6) {
+		struct sockaddr_in6 *sa = (struct sockaddr_in6 *)&raddr;
+		printf("{AF_INET6, %d, %s}", sa->sin6_port,
+		    inet_ntop(AF_INET6, &sa->sin6_addr, buf, sizeof(buf)));
+	}
+}
+
+void
+display_buffer(struct retrace_endpoint *ep, const void* addr, size_t len)
+{
 }

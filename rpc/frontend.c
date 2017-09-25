@@ -525,7 +525,7 @@ retrace_fetch_string(int fd, const char *address, char *buffer, size_t len)
 }
 
 int
-retrace_fetch_memory(int fd, unsigned long int address, void *buffer,
+retrace_fetch_memory(int fd, const void *address, void *buffer,
 	size_t len)
 {
 	struct rpc_memory_params mp = {(char *)address, len};

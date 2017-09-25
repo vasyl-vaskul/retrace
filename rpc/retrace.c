@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 		init_backtrace_handlers(trace_handle, backtrace_funcs);
 	#endif
 
-	set_default_handlers(trace_handle);
+	set_log_handlers(trace_handle);
 
 	retrace_trace(trace_handle);
 

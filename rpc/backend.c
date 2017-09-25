@@ -291,6 +291,18 @@ send_string(int fd, const char *s, size_t len)
 	return (result != -1 ? 1 : 0);
 }
 
+static int
+send_memory(int fd, const char *p, size_t len)
+{
+	ssize_t result;
+
+	do {
+		result = real_send(fd, p, len, 0);
+	} while (result == -1 && errno == EINTR);
+
+	return (result != -1 ? 1 : 0);
+}
+
 #if BACKTRACE
 static int
 send_backtrace(int fd, int depth)
@@ -314,6 +326,7 @@ rpc_handle_message(int fd, enum rpc_msg_type msg_type, void *buf)
 	struct rpc_backtrace_params *btp = buf;
 #endif
 	struct rpc_string_params *sp = buf;
+	struct rpc_memory_params *mp = buf;
 
 	if (fd == -1)
 		return 0;
@@ -321,6 +334,10 @@ rpc_handle_message(int fd, enum rpc_msg_type msg_type, void *buf)
 	switch (msg_type) {
 	case RPC_MSG_GET_STRING:
 		if (!send_string(fd, (char *)sp->address, sp->length))
+			return 0;
+		break;
+	case RPC_MSG_GET_MEMORY:
+		if (!send_memory(fd, (char *)mp->address, mp->length))
 			return 0;
 		break;
 #if BACKTRACE

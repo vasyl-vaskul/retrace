@@ -1,15 +1,123 @@
 {{=[[ ]]=}}
 #include "../config.h"
-#include <stdlib.h>
 #include <string.h>
-#include "rpc.h"
-#include "frontend.h"
-#include "handlers.h"
-#include "display.h"
-[[#functions]]
+#include <fcntl.h>
 
-void
-default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_call_context *context)
+#include "frontend.h"
+#include "display.h"
+
+#define LOG_PARAMS_bind
+static void
+log_params_bind(struct retrace_endpoint *ep, struct retrace_bind_params *params, int result)
+{
+	DISPLAY_fd(ep, params->sockfd);
+	printf(", ");
+	display_sockaddr(ep, params->addr, params->addrlen);
+	printf(", ");
+	DISPLAY_socklen_t(ep, params->addrlen);
+}
+
+#define LOG_PARAMS_connect
+static void
+log_params_connect(struct retrace_endpoint *ep, struct retrace_connect_params *params, int result)
+{
+	DISPLAY_fd(ep, params->sockfd);
+	printf(", ");
+	display_sockaddr(ep, params->addr, params->addrlen);
+	printf(", ");
+	DISPLAY_socklen_t(ep, params->addrlen);
+}
+
+#define LOG_PARAMS_open
+static void
+log_params_open(struct retrace_endpoint *ep, struct retrace_open_params *params, int result)
+{
+	DISPLAY_cstring(ep, params->pathname);
+	printf(", ");
+	DISPLAY_fileflags(ep, params->flags);
+	if (params->flags & (O_CREAT | O_TMPFILE)) {
+		printf(", ");
+		DISPLAY_mode_t(ep, params->mode);
+	}
+}
+
+#define LOG_PARAMS_openat
+static void
+log_params_openat(struct retrace_endpoint *ep, struct retrace_openat_params *params, int result)
+{
+	DISPLAY_fd(ep, params->dirfd);
+	printf(", ");
+	DISPLAY_cstring(ep, params->pathname);
+	printf(", ");
+	DISPLAY_fileflags(ep, params->flags);
+	if (params->flags & (O_CREAT | O_TMPFILE)) {
+		printf(", ");
+		DISPLAY_mode_t(ep, params->mode);
+	}
+}
+
+#define LOG_PARAMS_recvfrom
+static void
+log_params_recvfrom(struct retrace_endpoint *ep, struct retrace_recvfrom_params *params, int result)
+{
+	socklen_t addrlen = 0;
+
+	DISPLAY_fd(ep, params->sockfd);
+	printf(", ");
+
+	if (result != -1)
+		display_buffer(ep, params->buf, result);
+	else
+		DISPLAY_pvoid(ep, params->buf);
+
+	printf(", ");
+	DISPLAY_size_t(ep, params->len);
+	printf(", ");
+	DISPLAY_msgflags(ep, params->flags);
+	printf(", ");
+
+	if (result != -1 && params->addrlen != NULL)
+		retrace_fetch_memory(ep->fd, params->addrlen, &addrlen,
+		    sizeof(addrlen));
+
+	if (addrlen != 0) {
+		display_sockaddr(ep, params->src_addr, addrlen);
+		printf(", ");
+		DISPLAY_pint(ep, params->addrlen);
+	} else {
+		DISPLAY_pvoid(ep, params->src_addr);
+		printf(", ");
+		DISPLAY_pvoid(ep, params->addrlen);
+	}
+}
+
+#define LOG_PARAMS_sendto
+static void
+log_params_sendto(struct retrace_endpoint *ep, struct retrace_sendto_params *params, int result)
+{
+	DISPLAY_fd(ep, params->sockfd);
+	printf(", ");
+	if (result != -1)
+		DISPLAY_pvoid(ep, params->buf);
+	else
+		DISPLAY_pvoid(ep, params->buf);
+	printf(", ");
+	DISPLAY_size_t(ep, params->len);
+	printf(", ");
+	DISPLAY_msgflags(ep, params->flags);
+	printf(", ");
+	if (result != -1)
+		display_sockaddr(ep, params->dest_addr, params->addrlen);
+	else
+		DISPLAY_pvoid(ep, params->dest_addr);
+
+	printf(", ");
+	DISPLAY_int(ep, params->addrlen);
+}
+
+[[#functions]]
+static void
+log_[[name]](struct retrace_endpoint *ep, struct retrace_call_context *context)
 {
 [[#has_parameters]]
 	struct retrace_[[name]]_params *params = (struct retrace_[[name]]_params *)&context->params;
@@ -19,7 +127,7 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_ca
 [[/result]]
 
 	printf("(%d:%d %d)%.*s[[name]](", ep->pid, ep->thread_num, ep->call_num, ep->call_depth, "\t\t\t\t\t");
-#ifndef DISPLAYFN_[[name]]
+#ifndef LOG_PARAMS_[[name]]
 [[#params]]
 	DISPLAY_[[type]](ep, params->[[name]]);
 [[^last]]
@@ -27,7 +135,7 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_ca
 [[/last]]
 [[/params]]
 #else
-	DISPLAYFN_[[name]];
+	log_params_[[name]](ep, params, result);
 #endif
 	printf(")");
 [[#result]]
@@ -40,11 +148,12 @@ default_[[name]]_postcall_handler(struct retrace_endpoint *ep, struct retrace_ca
 [[/result]]
 	printf("\n");
 }
-[[/functions]]
 
-void set_default_handlers(struct retrace_handle *handle)
+[[/functions]]
+void
+set_log_handlers(struct retrace_handle *handle)
 {
 	[[#functions]]
-	retrace_add_postcall_handler(handle, RPC_[[name]], default_[[name]]_postcall_handler);
+	retrace_add_postcall_handler(handle, RPC_[[name]], log_[[name]]);
 	[[/functions]]
 };

@@ -6,12 +6,11 @@
 #define DISPLAY_char(ep, c)	display_char(c);
 #define DISPLAY_cmsghdr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_cstring(ep, p)	display_string(ep, p)
-#define DISPLAY_csockaddr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_dir(ep, p)	display_dir(ep, p)
 #define DISPLAY_dirent(ep, i)	DISPLAY_pvoid(ep, i)
 #define DISPLAY_domain(ep, p)	display_domain(p)
 #define DISPLAY_file(ep, p)	display_stream(ep, p)
-#define DISPLAY_fileflags(ep, i)	display_fflags(i)
+#define DISPLAY_fileflags(ep, i)	display_fflags(ep, i)
 #define DISPLAY_fd(ep, i)	display_fd(ep, i)
 #define DISPLAY_int(ep, i)	printf("%d", (i))
 #define DISPLAY_long(ep, i)	printf("%ld", (i))
@@ -24,11 +23,9 @@
 #define DISPLAY_pint(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_protocol(ep, i)	display_protocol(i)
 #define DISPLAY_psize_t(ep, p)	DISPLAY_pvoid(ep, p)
-#define DISPLAY_psocklen_t(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_pstring(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_pvoid(ep, p)	printf("%p", (p))
 #define DISPLAY_size_t(ep, i)	DISPLAY_ulong(ep, i)
-#define DISPLAY_sockaddr(ep, p)	DISPLAY_pvoid(ep, p)
 #define DISPLAY_socklen_t(ep, i)	DISPLAY_uint(ep, i)
 #define DISPLAY_socktype(ep, i)	display_socktype(i)
 #define DISPLAY_ssize_t(ep, i)	DISPLAY_long(ep, i)
@@ -46,11 +43,14 @@ struct display_info {
 	int tracefds;
 };
 
-void *display_buffer(void *buffer, size_t length);
+void display_buffer(struct retrace_endpoint *ep, const void *buffer,
+	size_t length);
 void display_char(int c);
 void display_domain(int domain);
 void display_errno(int _errno);
 void display_protocol(int protocol);
+void display_sockaddr(struct retrace_endpoint *ep,
+	const struct sockaddr *addr, socklen_t len);
 void display_socktype(int socktype);
 void display_string(struct retrace_endpoint *ep, const char *s);
 void display_fflags(struct retrace_endpoint *ep, int flags);

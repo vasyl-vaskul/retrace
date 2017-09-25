@@ -77,6 +77,7 @@ void retrace_add_postcall_handler(struct retrace_handle *handle,
 	enum retrace_function_id fid, retrace_postcall_handler_t fn);
 void retrace_set_user_data(struct retrace_handle *handle, void *data);
 int retrace_fetch_backtrace(int fd, int depth, char *buf, size_t len);
+int retrace_fetch_memory(int fd, const void *address, void *buffer, size_t len);
 int retrace_fetch_string(int fd, const char *address, char *buffer, size_t len);
 int retrace_fetch_fileno(int fd, FILE *s, int *result);
 enum retrace_function_id retrace_function_id(const char *name);
