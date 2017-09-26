@@ -285,7 +285,7 @@ send_string(int fd, const char *s, size_t len)
 		n = len;
 
 	do {
-		result = real_send(fd, s, n, 0);
+		result = real_sendto(fd, s, n, 0, NULL, 0);
 	} while (result == -1 && errno == EINTR);
 
 	return (result != -1 ? 1 : 0);
@@ -297,7 +297,7 @@ send_memory(int fd, const char *p, size_t len)
 	ssize_t result;
 
 	do {
-		result = real_send(fd, p, len, 0);
+		result = real_sendto(fd, p, len, 0, NULL, 0);
 	} while (result == -1 && errno == EINTR);
 
 	return (result != -1 ? 1 : 0);

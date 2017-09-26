@@ -121,8 +121,7 @@ display_string(struct retrace_endpoint *ep, const char *s)
 
 	if (s && hi->expand_strings) {
 		buf[hi->expand_strings] = '\0';
-		retrace_fetch_string(ep->fd, s, buf,
-		    hi->expand_strings + 1);
+		retrace_fetch_string(ep->fd, s, buf, sizeof(buf));
 		snipped = buf[hi->expand_strings] != '\0';
 		buf[hi->expand_strings] = '\0';
 		printf("\"");
@@ -198,20 +197,29 @@ display_fflags(struct retrace_endpoint *ep, int flags)
 		{O_ASYNC,	"O_ASYNC"},
 		{O_CLOEXEC,	"O_CLOEXEC"},
 		{O_CREAT,	"O_CREAT"},
-		{O_DIRECT,	"O_DIRECT"},
 		{O_DIRECTORY,	"O_DIRECTORY"},
 		{O_DSYNC,	"O_DSYNC"},
 		{O_EXCL,	"O_EXCL"},
-		{O_LARGEFILE,	"O_LARGEFILE"},
-		{O_NOATIME,	"O_NOATIME"},
 		{O_NOCTTY,	"O_NOCTTY"},
 		{O_NOFOLLOW,	"O_NOFOLLOW"},
 		{O_NONBLOCK,	"O_NONBLOCK"},
 		{O_NDELAY,	"O_NDELAY"},
-		{O_PATH,	"O_PATH"},
 		{O_SYNC,	"O_SYNC"},
-		{O_TMPFILE,	"O_TMPFILE"},
 		{O_TRUNC,	"O_TRUNC"},
+#ifndef __APPLE__
+		{O_DIRECT,	"O_DIRECT"},
+		{O_LARGEFILE,	"O_LARGEFILE"},
+		{O_NOATIME,	"O_NOATIME"},
+		{O_PATH,	"O_PATH"},
+		{O_TMPFILE,	"O_TMPFILE"},
+#endif
+
+#ifdef __APPLE__
+		{O_EVTONLY,	"O_EVTONLY"},
+		{O_EXLOCK,	"O_EXLOCK"},
+		{O_SHLOCK,	"O_SHLOCK"},
+		{O_SYMLINK,	"O_SYMLINK"},
+#endif
 		{0,	NULL} };
 	struct flag_name *f;
 
@@ -243,19 +251,20 @@ void
 display_msgflags(struct retrace_endpoint *ep, int flags)
 {
 	static struct flag_name flag_names[] = {
-		{MSG_CONFIRM,	"MSG_CONFIRM"},
 		{MSG_DONTROUTE,	"MSG_DONTROUTE"},
+		{MSG_OOB,	"MSG_OOB"},
+		{MSG_PEEK,	"MSG_PEEK"},
+		{MSG_WAITALL,	"MSG_WAITALL"},
+#ifndef __APPLE__
+		{MSG_CMSG_CLOEXEC,	"MSG_CMSG_CLOEXEC"},
+		{MSG_CONFIRM,	"MSG_CONFIRM"},
 		{MSG_DONTWAIT,	"MSG_DONTWAIT"},
 		{MSG_EOR,	"MSG_EOR"},
+		{MSG_ERRQUEUE,	"MSG_ERRQUEUE"},
 		{MSG_MORE,	"MSG_MORE"},
 		{MSG_NOSIGNAL,	"MSG_NOSIGNAL"},
-		{MSG_OOB,	"MSG_OOB"},
-		{MSG_CMSG_CLOEXEC,	"MSG_CMSG_CLOEXEC"},
-		{MSG_DONTWAIT,	"MSG_DONTWAIT"},
-		{MSG_ERRQUEUE,	"MSG_ERRQUEUE"},
-		{MSG_PEEK,	"MSG_PEEK"},
 		{MSG_TRUNC,	"MSG_TRUNC"},
-		{MSG_WAITALL,	"MSG_WAITALL"},
+#endif
 		{0,	NULL} };
 	struct flag_name *f;
 	const char *fmt = "%s";
@@ -288,23 +297,15 @@ display_errno(int _errno)
 		{EAFNOSUPPORT,	"EAFNOSUPPORT"},
 		{EAGAIN,	"EAGAIN"},
 		{EALREADY,	"EALREADY"},
-		{EBADE,	"EBADE"},
 		{EBADF,	"EBADF"},
-		{EBADFD,	"EBADFD"},
 		{EBADMSG,	"EBADMSG"},
-		{EBADR,	"EBADR"},
-		{EBADRQC,	"EBADRQC"},
-		{EBADSLT,	"EBADSLT"},
 		{EBUSY,	"EBUSY"},
 		{ECANCELED,	"ECANCELED"},
 		{ECHILD,	"ECHILD"},
-		{ECHRNG,	"ECHRNG"},
-		{ECOMM,	"ECOMM"},
 		{ECONNABORTED,	"ECONNABORTED"},
 		{ECONNREFUSED,	"ECONNREFUSED"},
 		{ECONNRESET,	"ECONNRESET"},
 		{EDEADLK,	"EDEADLK"},
-		{EDEADLOCK,	"EDEADLOCK"},
 		{EDESTADDRREQ,	"EDESTADDRREQ"},
 		{EDOM,	"EDOM"},
 		{EDQUOT,	"EDQUOT"},
@@ -321,21 +322,7 @@ display_errno(int _errno)
 		{EIO,	"EIO"},
 		{EISCONN,	"EISCONN"},
 		{EISDIR,	"EISDIR"},
-		{EISNAM,	"EISNAM"},
-		{EKEYEXPIRED,	"EKEYEXPIRED"},
-		{EKEYREJECTED,	"EKEYREJECTED"},
-		{EKEYREVOKED,	"EKEYREVOKED"},
-		{EL2HLT,	"EL2HLT"},
-		{EL2NSYNC,	"EL2NSYNC"},
-		{EL3HLT,	"EL3HLT"},
-		{EL3RST,	"EL3RST"},
-		{ELIBACC,	"ELIBACC"},
-		{ELIBBAD,	"ELIBBAD"},
-		{ELIBMAX,	"ELIBMAX"},
-		{ELIBSCN,	"ELIBSCN"},
-		{ELIBEXEC,	"ELIBEXEC"},
 		{ELOOP,	"ELOOP"},
-		{EMEDIUMTYPE,	"EMEDIUMTYPE"},
 		{EMFILE,	"EMFILE"},
 		{EMLINK,	"EMLINK"},
 		{EMSGSIZE,	"EMSGSIZE"},
@@ -350,14 +337,10 @@ display_errno(int _errno)
 		{ENODEV,	"ENODEV"},
 		{ENOENT,	"ENOENT"},
 		{ENOEXEC,	"ENOEXEC"},
-		{ENOKEY,	"ENOKEY"},
 		{ENOLCK,	"ENOLCK"},
 		{ENOLINK,	"ENOLINK"},
-		{ENOMEDIUM,	"ENOMEDIUM"},
 		{ENOMEM,	"ENOMEM"},
 		{ENOMSG,	"ENOMSG"},
-		{ENONET,	"ENONET"},
-		{ENOPKG,	"ENOPKG"},
 		{ENOPROTOOPT,	"ENOPROTOOPT"},
 		{ENOSPC,	"ENOSPC"},
 		{ENOSR,	"ENOSR"},
@@ -370,7 +353,6 @@ display_errno(int _errno)
 		{ENOTSOCK,	"ENOTSOCK"},
 		{ENOTSUP,	"ENOTSUP"},
 		{ENOTTY,	"ENOTTY"},
-		{ENOTUNIQ,	"ENOTUNIQ"},
 		{ENXIO,	"ENXIO"},
 		{EOPNOTSUPP,	"EOPNOTSUPP"},
 		{EOVERFLOW,	"EOVERFLOW"},
@@ -381,26 +363,78 @@ display_errno(int _errno)
 		{EPROTONOSUPPORT,	"EPROTONOSUPPORT"},
 		{EPROTOTYPE,	"EPROTOTYPE"},
 		{ERANGE,	"ERANGE"},
-		{EREMCHG,	"EREMCHG"},
 		{EREMOTE,	"EREMOTE"},
-		{EREMOTEIO,	"EREMOTEIO"},
-		{ERESTART,	"ERESTART"},
 		{EROFS,	"EROFS"},
 		{ESHUTDOWN,	"ESHUTDOWN"},
 		{ESPIPE,	"ESPIPE"},
 		{ESOCKTNOSUPPORT,	"ESOCKTNOSUPPORT"},
 		{ESRCH,	"ESRCH"},
 		{ESTALE,	"ESTALE"},
-		{ESTRPIPE,	"ESTRPIPE"},
 		{ETIME,	"ETIME"},
 		{ETIMEDOUT,	"ETIMEDOUT"},
 		{ETXTBSY,	"ETXTBSY"},
-		{EUCLEAN,	"EUCLEAN"},
-		{EUNATCH,	"EUNATCH"},
 		{EUSERS,	"EUSERS"},
 		{EWOULDBLOCK,	"EWOULDBLOCK"},
 		{EXDEV,	"EXDEV"},
+#ifndef __APPLE__
+		{EBADE,	"EBADE"},
+		{EBADFD,	"EBADFD"},
+		{EBADR,	"EBADR"},
+		{EBADRQC,	"EBADRQC"},
+		{EBADSLT,	"EBADSLT"},
+		{ECHRNG,	"ECHRNG"},
+		{ECOMM,	"ECOMM"},
+		{EDEADLOCK,	"EDEADLOCK"},
+		{EISNAM,	"EISNAM"},
+		{EKEYEXPIRED,	"EKEYEXPIRED"},
+		{EKEYREJECTED,	"EKEYREJECTED"},
+		{EKEYREVOKED,	"EKEYREVOKED"},
+		{EL2HLT,	"EL2HLT"},
+		{EL2NSYNC,	"EL2NSYNC"},
+		{EL3HLT,	"EL3HLT"},
+		{EL3RST,	"EL3RST"},
+		{ELIBACC,	"ELIBACC"},
+		{ELIBBAD,	"ELIBBAD"},
+		{ELIBMAX,	"ELIBMAX"},
+		{ELIBSCN,	"ELIBSCN"},
+		{ELIBEXEC,	"ELIBEXEC"},
+		{EMEDIUMTYPE,	"EMEDIUMTYPE"},
+		{ENOKEY,	"ENOKEY"},
+		{ENOMEDIUM,	"ENOMEDIUM"},
+		{ENONET,	"ENONET"},
+		{ENOPKG,	"ENOPKG"},
+		{ENOTUNIQ,	"ENOTUNIQ"},
+		{EREMCHG,	"EREMCHG"},
+		{EREMOTEIO,	"EREMOTEIO"},
+		{ERESTART,	"ERESTART"},
+		{ESTRPIPE,	"ESTRPIPE"},
+		{EUCLEAN,	"EUCLEAN"},
+		{EUNATCH,	"EUNATCH"},
 		{EXFULL,	"EXFULL"},
+#endif
+#ifdef __APPLE__
+		{EAUTH,	"EAUTH"},
+		{EBADARCH,	"EBADARCH"},
+		{EBADEXEC,	"EBADEXEC"},
+		{EBADMACHO,	"EBADMACHO"},
+		{EBADRPC,	"EBADRPC"},
+		{EDEVERR,	"EDEVERR"},
+		{EFTYPE,	"EFTYPE"},
+		{ENEEDAUTH,	"ENEEDAUTH"},
+		{ENOATTR,	"ENOATTR"},
+		{ENOPOLICY,	"ENOPOLICY"},
+		{ENOTRECOVERABLE,	"ENOTRECOVERABLE"},
+		{EOWNERDEAD,	"EOWNERDEAD"},
+		{EPROCLIM,	"EPROCLIM"},
+		{EPROCUNAVAIL,	"EPROCUNAVAIL"},
+		{EPROGMISMATCH,	"EPROGMISMATCH"},
+		{EPROGUNAVAIL,	"EPROGUNAVAIL"},
+		{EPWROFF,	"EPWROFF"},
+		{EQFULL,	"EQFULL"},
+		{ERPCMISMATCH,	"ERPCMISMATCH"},
+		{ESHLIBVERS,	"ESHLIBVERS"},
+		{ETOOMANYREFS,	"ETOOMANYREFS"},
+#endif
 		{0,	NULL} };
 	struct flag_name *f;
 
@@ -417,18 +451,30 @@ void
 display_domain(int domain)
 {
 	static struct flag_name flag_names[] = {
+#ifndef __APPLE__
 		{AF_UNIX,	"AF_UNIX"},
 		{AF_LOCAL,	"AF_LOCAL"},
 		{AF_INET,	"AF_INET"},
 		{AF_INET6,	"AF_INET6"},
 		{AF_IPX,	"AF_IPX"},
+		{AF_APPLETALK,	"AF_APPLETALK"},
 		{AF_NETLINK,	"AF_NETLINK"},
 		{AF_X25,	"AF_X25"},
 		{AF_AX25,	"AF_AX25"},
 		{AF_ATMPVC,	"AF_ATMPVC"},
-		{AF_APPLETALK,	"AF_APPLETALK"},
 		{AF_PACKET,	"AF_PACKET"},
 		{AF_ALG,	"AF_ALG"},
+#endif
+#ifdef __APPLE__
+		{PF_LOCAL,	"PF_LOCAL"},
+		{PF_UNIX,	"PF_UNIX"},
+		{PF_INET,	"PF_INET"},
+		{PF_ROUTE,	"PF_ROUTE"},
+		{PF_KEY,	"PF_KEY"},
+		{PF_INET6,	"PF_INET6"},
+		{PF_SYSTEM,	"PF_SYSTEM"},
+		{PF_NDRV,	"PF_NDRV"},
+#endif
 		{0,	NULL} };
 	struct flag_name *f;
 
@@ -494,9 +540,11 @@ display_socktype(int socktype)
 		{SOCK_SEQPACKET,	"SOCK_SEQPACKET"},
 		{SOCK_RAW,	"SOCK_RAW"},
 		{SOCK_RDM,	"SOCK_RDM"},
+#ifndef __APPLE__
 		{SOCK_PACKET,	"SOCK_PACKET"},
 		{SOCK_NONBLOCK,	"SOCK_NONBLOCK"},
 		{SOCK_CLOEXEC,	"SOCK_CLOEXEC"},
+#endif
 		{0,	NULL} };
 	struct flag_name *f;
 
@@ -575,7 +623,11 @@ display_msg(struct retrace_endpoint *ep, const struct msghdr *msg, size_t msglen
 
 	printf(", ");
 	display_iovec(ep, rmsg.msg_iov, rmsg.msg_iovlen, msglen);
+#ifdef __LINUX__
 	printf(", %lu}", rmsg.msg_iovlen);
+#else
+	printf(", %d}", rmsg.msg_iovlen);
+#endif
 }
 
 void

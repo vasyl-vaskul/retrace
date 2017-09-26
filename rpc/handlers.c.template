@@ -11,7 +11,7 @@
 #else
 #define OPEN_CREATE_FLAGS O_CREAT
 #endif
-#
+
 #define LOG_PARAMS_bind
 static void
 log_params_bind(struct retrace_endpoint *ep, struct retrace_bind_params *params, int result)

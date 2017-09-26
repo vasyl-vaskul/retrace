@@ -33,6 +33,12 @@
 #include "tracefd.h"
 #include "handlers.h"
 
+#ifndef __APPLE__
+#define OPEN_CREATE_FLAGS (O_CREAT | O_TMPFILE)
+#else
+#define OPEN_CREATE_FLAGS O_CREAT
+#endif
+
 void
 set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir, const char *info)
 {
@@ -265,7 +271,7 @@ open_postcall(struct retrace_endpoint *ep,
 	if (x == 0)
 		return;
 
-	if (params->flags & (O_CREAT | O_TMPFILE))
+	if (params->flags & OPEN_CREATE_FLAGS)
 		snprintf(info, sizeof(info), "open(\"%s\", 0x%x, 0%.3o)",
 		    path, params->flags, params->mode);
 	else
@@ -294,7 +300,7 @@ openat_postcall(struct retrace_endpoint *ep,
 	if (x == 0)
 		return;
 
-	if (params->flags & (O_CREAT | O_TMPFILE))
+	if (params->flags & OPEN_CREATE_FLAGS)
 		snprintf(info, sizeof(info),
 		    "openat(%d, \"%s\", 0x%x, 0%.3o)",
 		    params->dirfd, path, params->flags, params->mode);

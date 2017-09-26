@@ -49,6 +49,11 @@ parameter stream file
 parameter format cstring
 variadic real_vfprintf
 
+function fputs int
+parameter s cstring
+parameter stream file
+errno EOF
+
 function free void
 parameter ptr pvoid
 
