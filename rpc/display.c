@@ -623,7 +623,7 @@ display_msg(struct retrace_endpoint *ep, const struct msghdr *msg, size_t msglen
 
 	printf(", ");
 	display_iovec(ep, rmsg.msg_iov, rmsg.msg_iovlen, msglen);
-#ifdef __LINUX__
+#ifndef __APPLE__
 	printf(", %lu}", rmsg.msg_iovlen);
 #else
 	printf(", %d}", rmsg.msg_iovlen);
