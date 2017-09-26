@@ -91,6 +91,34 @@ log_params_recvfrom(struct retrace_endpoint *ep, struct retrace_recvfrom_params 
 	}
 }
 
+#define LOG_PARAMS_recvmsg
+static void
+log_params_recvmsg(struct retrace_endpoint *ep, struct retrace_recvmsg_params *params, int result)
+{
+	DISPLAY_fd(ep, params->sockfd);
+	printf(", ");
+	if (result != -1)
+		display_msg(ep, params->msg, result);
+	else
+		DISPLAY_pvoid(ep, params->msg);
+	printf(", ");
+	DISPLAY_msgflags(ep, params->flags);
+}
+
+#define LOG_PARAMS_sendmsg
+static void
+log_params_sendmsg(struct retrace_endpoint *ep, struct retrace_sendmsg_params *params, int result)
+{
+	DISPLAY_fd(ep, params->sockfd);
+	printf(", ");
+	if (result != -1)
+		display_msg(ep, params->msg, result);
+	else
+		display_msg(ep, params->msg, 0);
+	printf(", ");
+	DISPLAY_msgflags(ep, params->flags);
+}
+
 #define LOG_PARAMS_sendto
 static void
 log_params_sendto(struct retrace_endpoint *ep, struct retrace_sendto_params *params, int result)

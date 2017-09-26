@@ -9,6 +9,7 @@ struct handler_info {
 #if BACKTRACE
 	int backtrace_depth;
 #endif
+	int expand_buffers;
 	int expand_strings;
 	int expand_structs;
 	int tracefds;

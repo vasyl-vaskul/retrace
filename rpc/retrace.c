@@ -46,13 +46,14 @@ static struct option options[] = {
 	{"backtrace-functions", required_argument, 0, 'b'},
 	{"backtrace-depth", required_argument, 0, 'd'},
 #endif
+	{"show-buffers", required_argument, 0, 'u'},
 	{"show-strings", required_argument, 0, 's'},
 	{"show-structs", no_argument, 0, 't'},
 	{"trace-fds", no_argument, 0, 'F'},
 	{NULL, 0, 0, 0}
 };
 
-#define STDOPTS "+f:s:hvFt"
+#define STDOPTS "+f:s:u:hvFt"
 
 #if BACKTRACE
 #define BTOPTS "b:d:"
@@ -75,6 +76,8 @@ static void usage(const char *argv0, int exitval)
 	    "Options:\n"
 	    "  -f --functions=LIST	LIST is a comma separated list of "
 	    "function names to trace (defaults to all supported functions)\n"
+	    "  -u --show-buffers=n	Show the first n bytes of "
+	    "buffer parameters\n"
 	    "  -s --show-strings=n	Show the first n characters of "
 	    "string parameters\n"
 	    "  -t --show-structs	Show additional information for "
@@ -147,6 +150,9 @@ int main(int argc, char **argv)
 			handler_info.backtrace_depth = atoi(optarg);
 			break;
 #endif
+		case 'u':
+			handler_info.expand_buffers = atoi(optarg);
+			break;
 		case 's':
 			handler_info.expand_strings = atoi(optarg);
 			break;

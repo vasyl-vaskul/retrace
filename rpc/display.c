@@ -115,16 +115,16 @@ print_string(const char *s)
 void
 display_string(struct retrace_endpoint *ep, const char *s)
 {
-	struct display_info *di = ep->handle->user_data;
-	char buf[di->expand_strings + 1];
+	struct handler_info *hi = ep->handle->user_data;
+	char buf[hi->expand_strings + 1];
 	int snipped;
 
-	if (s && di->expand_strings) {
-		buf[di->expand_strings] = '\0';
+	if (s && hi->expand_strings) {
+		buf[hi->expand_strings] = '\0';
 		retrace_fetch_string(ep->fd, s, buf,
-		    di->expand_strings + 1);
-		snipped = buf[di->expand_strings] != '\0';
-		buf[di->expand_strings] = '\0';
+		    hi->expand_strings + 1);
+		snipped = buf[hi->expand_strings] != '\0';
+		buf[hi->expand_strings] = '\0';
 		printf("\"");
 		print_string(buf);
 		printf(snipped ? "\"+" : "\"");
@@ -512,14 +512,14 @@ display_socktype(int socktype)
 void
 display_sockaddr(struct retrace_endpoint *ep, const struct sockaddr* addr, socklen_t len)
 {
-	struct display_info *di = ep->handle->user_data;
+	struct handler_info *hi = ep->handle->user_data;
 	struct sockaddr_storage raddr;
 	int x;
 	char buf[256];
 
 	assert (sizeof(struct sockaddr_un) <= sizeof(raddr));
 
-	if (!di->expand_structs || addr == NULL) {
+	if (!hi->expand_structs || addr == NULL) {
 		DISPLAY_pvoid(ep, addr);
 		return;
 	}
@@ -539,16 +539,105 @@ display_sockaddr(struct retrace_endpoint *ep, const struct sockaddr* addr, sockl
 		    sa->sun_path);
 	} else if (raddr.ss_family == AF_INET) {
 		struct sockaddr_in *sa = (struct sockaddr_in *)&raddr;
-		printf("{AF_INET, %d, %s}", sa->sin_port,
+		printf("{AF_INET, %d, %s}", ntohs(sa->sin_port),
 		    inet_ntop(AF_INET, &sa->sin_addr, buf, sizeof(buf)));
 	} else if (raddr.ss_family == AF_INET6) {
 		struct sockaddr_in6 *sa = (struct sockaddr_in6 *)&raddr;
-		printf("{AF_INET6, %d, %s}", sa->sin6_port,
+		printf("{AF_INET6, %d, %s}", ntohs(sa->sin6_port),
 		    inet_ntop(AF_INET6, &sa->sin6_addr, buf, sizeof(buf)));
+	}
+}
+
+void
+display_msg(struct retrace_endpoint *ep, const struct msghdr *msg, size_t msglen)
+{
+	struct handler_info *hi = ep->handle->user_data;
+	struct msghdr rmsg;
+	int x;
+
+	if (!hi->expand_structs || msg == NULL) {
+		DISPLAY_pvoid(ep, msg);
+		return;
+	}
+
+	x = retrace_fetch_memory(ep->fd, msg, &rmsg, sizeof(rmsg));
+	if (x == 0) {
+		DISPLAY_pvoid(ep, msg);
+		return;
+	}
+
+	printf("{");
+	if (rmsg.msg_name != NULL)
+		display_sockaddr(ep, rmsg.msg_name, rmsg.msg_namelen);
+	else
+		printf("NULL");
+	printf(", %d", rmsg.msg_namelen);
+
+	printf(", ");
+	display_iovec(ep, rmsg.msg_iov, rmsg.msg_iovlen, msglen);
+	printf(", %lu}", rmsg.msg_iovlen);
+}
+
+void
+display_iovec(struct retrace_endpoint *ep, const struct iovec *iov, size_t iovlen, size_t msglen)
+{
+	struct handler_info *hi = ep->handle->user_data;
+	struct iovec riov[iovlen];
+	int i, x;
+	size_t len;
+
+	if (!hi->expand_structs || iov == NULL) {
+		DISPLAY_pvoid(ep, iov);
+		return;
+	}
+
+	x = retrace_fetch_memory(ep->fd, iov, riov, sizeof(riov));
+	if (x == 0) {
+		DISPLAY_pvoid(ep, iov);
+		return;
+	}
+
+	printf("{");
+	for (i = 0; i < iovlen; i++) {
+		printf("{");
+		len = riov[i].iov_len;
+		if (len > msglen)
+			len = msglen;
+		msglen -= len;
+		display_buffer(ep, riov[i].iov_base, len);
+		printf(", %lu}", riov[i].iov_len);
 	}
 }
 
 void
 display_buffer(struct retrace_endpoint *ep, const void* addr, size_t len)
 {
+	static const char hex[] = "0123456789abcdef";
+	struct handler_info *hi = ep->handle->user_data;
+	char buf[hi->expand_buffers];
+	int x, i, truncated = 0;
+	const char *mask;
+
+	if (!hi->expand_buffers || addr == NULL) {
+		DISPLAY_pvoid(ep, addr);
+		return;
+	}
+
+	if (len > hi->expand_buffers) {
+		len = hi->expand_buffers;
+		truncated = 1;
+	}
+
+	x = retrace_fetch_memory(ep->fd, addr, buf, len);
+	if (x == 0) {
+		DISPLAY_pvoid(ep, addr);
+		return;
+	}
+
+	mask = "[%c%c";
+	for (i = 0; i < len; i++) {
+		printf(mask, hex[buf[i] >> 4 & 0x0f], hex[buf[i] & 0x0f]);
+		mask = " %c%c";
+	}
+	printf(truncated ? "]+" : "]");
 }
