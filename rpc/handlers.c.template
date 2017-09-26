@@ -6,6 +6,12 @@
 #include "frontend.h"
 #include "display.h"
 
+#ifndef __APPLE__
+#define OPEN_CREATE_FLAGS (O_CREAT | O_TMPFILE)
+#else
+#define OPEN_CREATE_FLAGS O_CREAT
+#endif
+#
 #define LOG_PARAMS_bind
 static void
 log_params_bind(struct retrace_endpoint *ep, struct retrace_bind_params *params, int result)
@@ -35,7 +41,7 @@ log_params_open(struct retrace_endpoint *ep, struct retrace_open_params *params,
 	DISPLAY_cstring(ep, params->pathname);
 	printf(", ");
 	DISPLAY_fileflags(ep, params->flags);
-	if (params->flags & (O_CREAT | O_TMPFILE)) {
+	if (params->flags & OPEN_CREATE_FLAGS) {
 		printf(", ");
 		DISPLAY_mode_t(ep, params->mode);
 	}
@@ -50,7 +56,7 @@ log_params_openat(struct retrace_endpoint *ep, struct retrace_openat_params *par
 	DISPLAY_cstring(ep, params->pathname);
 	printf(", ");
 	DISPLAY_fileflags(ep, params->flags);
-	if (params->flags & (O_CREAT | O_TMPFILE)) {
+	if (params->flags & OPEN_CREATE_FLAGS) {
 		printf(", ");
 		DISPLAY_mode_t(ep, params->mode);
 	}
