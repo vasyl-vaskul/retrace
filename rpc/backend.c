@@ -183,7 +183,7 @@ rpc_get_sockfd()
 	 * BSDs pthread_once calls these so tracing them
 	 * before init is complete causes infinite recusion
 	 */
-	if ((fid == RPC_getenv || fid == RPC_malloc) && initialised == 0)
+	if ((fid == RPC_getenv || fid == RPC_malloc || fid == RPC_memset) && initialised == 0)
 		return -1;
 
 	pthread_once(&g_once_control, init);

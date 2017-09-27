@@ -1,4 +1,4 @@
-AM_CFLAGS = -Wall -Wno-sizeof-array-argument
+AM_CFLAGS = -Wall
 noinst_PROGRAMS = functions2yaml
 functions2yaml_SOURCES = functions2yaml.c
 
@@ -20,13 +20,6 @@ if OPENBSD
 MD5SUM=/bin/md5
 endif
 
-if !OPENBSD
-MUSTACHE=mustache
-endif
-if OPENBSD
-MUSTACHE=mustache22
-endif
-
 FUNCTIONS_DEPS= shim.c shim.h handlers.c functions.c functions.h
 
 BUILT_SOURCES= $(FUNCTIONS_DEPS) version.c
@@ -41,7 +34,7 @@ handlers.c : handlers.c.template
 $(FUNCTIONS_DEPS): functions.yaml
 
 $(FUNCTIONS_DEPS):
-	$(MUSTACHE) - $@.template <functions.yaml >$@
+	mustache - $@.template <functions.yaml >$@
 
 version.c : $(FUNCTION_DEPS)
 	echo const char *retrace_version = \"$$(cat $(FUNCTIONS_DEPS) | $(MD5SUM) | cut -c1-32)\"\; >$@

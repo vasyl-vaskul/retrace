@@ -33,7 +33,7 @@
 #include "tracefd.h"
 #include "handlers.h"
 
-#ifndef __APPLE__
+#if HAVE_DECL_O_TMPFILE
 #define OPEN_CREATE_FLAGS (O_CREAT | O_TMPFILE)
 #else
 #define OPEN_CREATE_FLAGS O_CREAT
@@ -43,6 +43,7 @@ void
 set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir, const char *info)
 {
 	struct dirinfo *di;
+	size_t infolen;
 
 	di = (struct dirinfo *)get_dirinfo(infos, pid, dir);
 	if (di != NULL) {
@@ -53,12 +54,13 @@ set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir, const char *info)
 	if (info == NULL)
 		return;
 
-	di = malloc(sizeof(struct dirinfo) + strlen(info) + 1);
+	infolen = strlen(info) +1;
+	di = malloc(sizeof(struct dirinfo) + infolen);
 	if (di != NULL) {
 		di->dir = dir;
 		di->pid = pid;
 		di->info = (char *)&di[1];
-		strcpy(di->info, info);
+		strlcpy(di->info, info, infolen);
 		SLIST_INSERT_HEAD(infos, di, next);
 	}
 }
@@ -82,6 +84,7 @@ set_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream,
 	const char *info)
 {
 	struct streaminfo *si;
+	size_t infolen;
 
 	si = (struct streaminfo *)get_streaminfo(infos, pid, stream);
 	if (si != NULL) {
@@ -92,12 +95,13 @@ set_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream,
 	if (info == NULL)
 		return;
 
-	si = malloc(sizeof(struct streaminfo) + strlen(info) + 1);
+	infolen = strlen(info) + 1;
+	si = malloc(sizeof(struct streaminfo) + infolen);
 	if (si != NULL) {
 		si->stream = stream;
 		si->pid = pid;
 		si->info = (char *)&si[1];
-		strcpy(si->info, info);
+		strlcpy(si->info, info, infolen);
 		SLIST_INSERT_HEAD(infos, si, next);
 	}
 }
@@ -119,6 +123,7 @@ set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd,
 	const char *info)
 {
 	struct fdinfo *fi;
+	size_t infolen;
 
 	fi = (struct fdinfo *)get_fdinfo(infos, pid, fd);
 	if (fi != NULL) {
@@ -129,12 +134,13 @@ set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd,
 	if (info == NULL)
 		return;
 
-	fi = malloc(sizeof(struct fdinfo) + strlen(info) + 1);
+	infolen = strlen(info);
+	fi = malloc(sizeof(struct fdinfo) + infolen);
 	if (fi != NULL) {
 		fi->fd = fd;
 		fi->pid = pid;
 		fi->info = (char *)&fi[1];
-		strcpy(fi->info, info);
+		strlcpy(fi->info, info, infolen);
 		SLIST_INSERT_HEAD(infos, fi, next);
 	}
 }

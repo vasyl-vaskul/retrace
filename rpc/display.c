@@ -206,19 +206,20 @@ display_fflags(struct retrace_endpoint *ep, int flags)
 		{O_NDELAY,	"O_NDELAY"},
 		{O_SYNC,	"O_SYNC"},
 		{O_TRUNC,	"O_TRUNC"},
-#ifndef __APPLE__
+#if (!defined __APPLE__) && (!defined __OpenBSD__)
 		{O_DIRECT,	"O_DIRECT"},
 		{O_LARGEFILE,	"O_LARGEFILE"},
 		{O_NOATIME,	"O_NOATIME"},
 		{O_PATH,	"O_PATH"},
 		{O_TMPFILE,	"O_TMPFILE"},
 #endif
-
 #ifdef __APPLE__
 		{O_EVTONLY,	"O_EVTONLY"},
+		{O_SYMLINK,	"O_SYMLINK"},
+#endif
+#if (defined __APPLE__) || (defined __OpenBSD__)
 		{O_EXLOCK,	"O_EXLOCK"},
 		{O_SHLOCK,	"O_SHLOCK"},
-		{O_SYMLINK,	"O_SYMLINK"},
 #endif
 		{0,	NULL} };
 	struct flag_name *f;
@@ -255,15 +256,17 @@ display_msgflags(struct retrace_endpoint *ep, int flags)
 		{MSG_OOB,	"MSG_OOB"},
 		{MSG_PEEK,	"MSG_PEEK"},
 		{MSG_WAITALL,	"MSG_WAITALL"},
-#ifndef __APPLE__
+#ifdef __linux__
 		{MSG_CMSG_CLOEXEC,	"MSG_CMSG_CLOEXEC"},
 		{MSG_CONFIRM,	"MSG_CONFIRM"},
-		{MSG_DONTWAIT,	"MSG_DONTWAIT"},
-		{MSG_EOR,	"MSG_EOR"},
 		{MSG_ERRQUEUE,	"MSG_ERRQUEUE"},
 		{MSG_MORE,	"MSG_MORE"},
-		{MSG_NOSIGNAL,	"MSG_NOSIGNAL"},
 		{MSG_TRUNC,	"MSG_TRUNC"},
+#endif
+#if (defined __linux__) || defined (__OpenBSD__)
+		{MSG_DONTWAIT,	"MSG_DONTWAIT"},
+		{MSG_NOSIGNAL,	"MSG_NOSIGNAL"},
+		{MSG_EOR,	"MSG_EOR"},
 #endif
 		{0,	NULL} };
 	struct flag_name *f;
@@ -298,7 +301,6 @@ display_errno(int _errno)
 		{EAGAIN,	"EAGAIN"},
 		{EALREADY,	"EALREADY"},
 		{EBADF,	"EBADF"},
-		{EBADMSG,	"EBADMSG"},
 		{EBUSY,	"EBUSY"},
 		{ECANCELED,	"ECANCELED"},
 		{ECHILD,	"ECHILD"},
@@ -326,25 +328,20 @@ display_errno(int _errno)
 		{EMFILE,	"EMFILE"},
 		{EMLINK,	"EMLINK"},
 		{EMSGSIZE,	"EMSGSIZE"},
-		{EMULTIHOP,	"EMULTIHOP"},
 		{ENAMETOOLONG,	"ENAMETOOLONG"},
 		{ENETDOWN,	"ENETDOWN"},
 		{ENETRESET,	"ENETRESET"},
 		{ENETUNREACH,	"ENETUNREACH"},
 		{ENFILE,	"ENFILE"},
 		{ENOBUFS,	"ENOBUFS"},
-		{ENODATA,	"ENODATA"},
 		{ENODEV,	"ENODEV"},
 		{ENOENT,	"ENOENT"},
 		{ENOEXEC,	"ENOEXEC"},
 		{ENOLCK,	"ENOLCK"},
-		{ENOLINK,	"ENOLINK"},
 		{ENOMEM,	"ENOMEM"},
 		{ENOMSG,	"ENOMSG"},
 		{ENOPROTOOPT,	"ENOPROTOOPT"},
 		{ENOSPC,	"ENOSPC"},
-		{ENOSR,	"ENOSR"},
-		{ENOSTR,	"ENOSTR"},
 		{ENOSYS,	"ENOSYS"},
 		{ENOTBLK,	"ENOTBLK"},
 		{ENOTCONN,	"ENOTCONN"},
@@ -359,24 +356,51 @@ display_errno(int _errno)
 		{EPERM,	"EPERM"},
 		{EPFNOSUPPORT,	"EPFNOSUPPORT"},
 		{EPIPE,	"EPIPE"},
-		{EPROTO,	"EPROTO"},
 		{EPROTONOSUPPORT,	"EPROTONOSUPPORT"},
 		{EPROTOTYPE,	"EPROTOTYPE"},
 		{ERANGE,	"ERANGE"},
 		{EREMOTE,	"EREMOTE"},
 		{EROFS,	"EROFS"},
 		{ESHUTDOWN,	"ESHUTDOWN"},
-		{ESPIPE,	"ESPIPE"},
 		{ESOCKTNOSUPPORT,	"ESOCKTNOSUPPORT"},
+		{ESPIPE,	"ESPIPE"},
 		{ESRCH,	"ESRCH"},
 		{ESTALE,	"ESTALE"},
-		{ETIME,	"ETIME"},
 		{ETIMEDOUT,	"ETIMEDOUT"},
 		{ETXTBSY,	"ETXTBSY"},
 		{EUSERS,	"EUSERS"},
 		{EWOULDBLOCK,	"EWOULDBLOCK"},
 		{EXDEV,	"EXDEV"},
-#ifndef __APPLE__
+#if (defined __APPLE__) || defined (__OpenBSD__)
+		{EAUTH,	"EAUTH"},
+		{EBADRPC,	"EBADRPC"},
+		{EFTYPE,	"EFTYPE"},
+		{ENEEDAUTH,	"ENEEDAUTH"},
+		{ENOATTR,	"ENOATTR"},
+		{EPROCLIM,	"EPROCLIM"},
+		{EPROCUNAVAIL,	"EPROCUNAVAIL"},
+		{EPROGMISMATCH,	"EPROGMISMATCH"},
+		{EPROGUNAVAIL,	"EPROGUNAVAIL"},
+		{ERPCMISMATCH,	"ERPCMISMATCH"},
+#endif
+#if (defined __APPLE__) || defined (__linux__)
+		{EBADMSG,	"EBADMSG"},
+		{EMULTIHOP,	"EMULTIHOP"},
+		{ENODATA,	"ENODATA"},
+		{ENOLINK,	"ENOLINK"},
+		{ENOSR,	"ENOSR"},
+		{ENOSTR,	"ENOSTR"},
+		{EPROTO,	"EPROTO"},
+		{ETIME,	"ETIME"},
+#endif
+#if (defined __OpenBSD__) || defined (__linux__)
+		{EMEDIUMTYPE,	"EMEDIUMTYPE"},
+		{ENOMEDIUM,	"ENOMEDIUM"},
+#endif
+#ifdef __OpenBSD__
+		{EIPSEC,	"EIPSEC"},
+#endif
+#ifdef __linux__
 		{EBADE,	"EBADE"},
 		{EBADFD,	"EBADFD"},
 		{EBADR,	"EBADR"},
@@ -398,9 +422,7 @@ display_errno(int _errno)
 		{ELIBMAX,	"ELIBMAX"},
 		{ELIBSCN,	"ELIBSCN"},
 		{ELIBEXEC,	"ELIBEXEC"},
-		{EMEDIUMTYPE,	"EMEDIUMTYPE"},
 		{ENOKEY,	"ENOKEY"},
-		{ENOMEDIUM,	"ENOMEDIUM"},
 		{ENONET,	"ENONET"},
 		{ENOPKG,	"ENOPKG"},
 		{ENOTUNIQ,	"ENOTUNIQ"},
@@ -413,25 +435,15 @@ display_errno(int _errno)
 		{EXFULL,	"EXFULL"},
 #endif
 #ifdef __APPLE__
-		{EAUTH,	"EAUTH"},
 		{EBADARCH,	"EBADARCH"},
 		{EBADEXEC,	"EBADEXEC"},
 		{EBADMACHO,	"EBADMACHO"},
-		{EBADRPC,	"EBADRPC"},
 		{EDEVERR,	"EDEVERR"},
-		{EFTYPE,	"EFTYPE"},
-		{ENEEDAUTH,	"ENEEDAUTH"},
-		{ENOATTR,	"ENOATTR"},
 		{ENOPOLICY,	"ENOPOLICY"},
 		{ENOTRECOVERABLE,	"ENOTRECOVERABLE"},
 		{EOWNERDEAD,	"EOWNERDEAD"},
-		{EPROCLIM,	"EPROCLIM"},
-		{EPROCUNAVAIL,	"EPROCUNAVAIL"},
-		{EPROGMISMATCH,	"EPROGMISMATCH"},
-		{EPROGUNAVAIL,	"EPROGUNAVAIL"},
 		{EPWROFF,	"EPWROFF"},
 		{EQFULL,	"EQFULL"},
-		{ERPCMISMATCH,	"ERPCMISMATCH"},
 		{ESHLIBVERS,	"ESHLIBVERS"},
 		{ETOOMANYREFS,	"ETOOMANYREFS"},
 #endif
@@ -451,19 +463,21 @@ void
 display_domain(int domain)
 {
 	static struct flag_name flag_names[] = {
-#ifndef __APPLE__
-		{AF_UNIX,	"AF_UNIX"},
-		{AF_LOCAL,	"AF_LOCAL"},
-		{AF_INET,	"AF_INET"},
-		{AF_INET6,	"AF_INET6"},
-		{AF_IPX,	"AF_IPX"},
-		{AF_APPLETALK,	"AF_APPLETALK"},
+#ifdef __linux__
 		{AF_NETLINK,	"AF_NETLINK"},
 		{AF_X25,	"AF_X25"},
 		{AF_AX25,	"AF_AX25"},
 		{AF_ATMPVC,	"AF_ATMPVC"},
 		{AF_PACKET,	"AF_PACKET"},
 		{AF_ALG,	"AF_ALG"},
+#endif
+#if (defined __linux__) || defined (__OpenBSD__)
+		{AF_UNIX,	"AF_UNIX"},
+		{AF_LOCAL,	"AF_LOCAL"},
+		{AF_INET,	"AF_INET"},
+		{AF_INET6,	"AF_INET6"},
+		{AF_IPX,	"AF_IPX"},
+		{AF_APPLETALK,	"AF_APPLETALK"},
 #endif
 #ifdef __APPLE__
 		{PF_LOCAL,	"PF_LOCAL"},
@@ -540,8 +554,10 @@ display_socktype(int socktype)
 		{SOCK_SEQPACKET,	"SOCK_SEQPACKET"},
 		{SOCK_RAW,	"SOCK_RAW"},
 		{SOCK_RDM,	"SOCK_RDM"},
-#ifndef __APPLE__
+#ifdef __linux__
 		{SOCK_PACKET,	"SOCK_PACKET"},
+#endif
+#if (defined __linix__) || defined (__OpenBSD__)
 		{SOCK_NONBLOCK,	"SOCK_NONBLOCK"},
 		{SOCK_CLOEXEC,	"SOCK_CLOEXEC"},
 #endif
@@ -623,7 +639,7 @@ display_msg(struct retrace_endpoint *ep, const struct msghdr *msg, size_t msglen
 
 	printf(", ");
 	display_iovec(ep, rmsg.msg_iov, rmsg.msg_iovlen, msglen);
-#ifndef __APPLE__
+#ifdef __linux__
 	printf(", %lu}", rmsg.msg_iovlen);
 #else
 	printf(", %d}", rmsg.msg_iovlen);
