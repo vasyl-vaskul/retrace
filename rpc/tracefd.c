@@ -352,7 +352,7 @@ socketpair_postcall(struct retrace_endpoint *ep,
 
 	snprintf(info, sizeof(info), "socketpair(%d, %d, %d, %d<->%d)",
 	    params->domain, params->type, params->protocol,
- 	    *params->sv, *(params->sv + 1));
+	    *params->sv, *(params->sv + 1));
 	set_fdinfo(fdinfos, ep->pid, params->sv[0], info);
 	set_fdinfo(fdinfos, ep->pid, params->sv[1], info);
 }
