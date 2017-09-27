@@ -39,10 +39,6 @@
 #include "rpc.h"
 #include "backend.h"
 
-/*
- * TODO: pthread_setspecific(g_fdkey, (void *)-1);
- */
-
 static pthread_once_t g_once_control = PTHREAD_ONCE_INIT;
 static pthread_key_t g_fdkey;
 static int g_sockfd = -1;
@@ -50,6 +46,7 @@ static int g_sockfd = -1;
 static void
 free_tls(void *p)
 {
+	g_sockfd = -1;
 	real_close((long int)p);
 }
 
@@ -200,6 +197,9 @@ rpc_get_sockfd()
 #else
 	pthread_once(&g_once_control, init);
 #endif
+
+	if (g_sockfd == -1)
+		return -1;
 
 	fd = (long int)pthread_getspecific(g_fdkey);
 	if (fd == 0) {

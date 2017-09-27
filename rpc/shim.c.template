@@ -104,8 +104,8 @@ int trace_functions[RPC_FUNCTION_COUNT];
 	}
 
 rpc_fail:
-	real_close(_fd);
 	rpc_set_sockfd(-1);
+	real_close(_fd);
 
 	if (!_postcall) {
 [[#variadic]]
