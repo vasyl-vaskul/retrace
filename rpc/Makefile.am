@@ -11,13 +11,9 @@ bin_PROGRAMS = retrace
 retrace_SOURCES = retrace.c version.c handlers.c frontend.c functions.c display.c tracefd.c backtrace.c
 
 if LINUX
-MD5SUM=/usr/bin/md5sum
-endif
-if DARWIN
-MD5SUM=/sbin/md5
-endif
-if OPENBSD
-MD5SUM=/bin/md5
+MD5SUM=md5sum
+else
+MD5SUM=md5
 endif
 
 FUNCTIONS_DEPS= shim.c shim.h handlers.c functions.c functions.h

@@ -46,7 +46,7 @@ int trace_functions[RPC_FUNCTION_COUNT];
 
 	_errno = errno;
 
-#if defined(__OpenBSD__)
+#if defined __OpenBSD__ || defined __FreeBSD__
 	_fd = rpc_get_sockfd(RPC_[[name]]);
 #else
 	_fd = rpc_get_sockfd();

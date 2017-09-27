@@ -122,7 +122,7 @@ new_rpc_endpoint()
 	struct iovec iov[] = {
 	    {&control_header, sizeof(control_header)},
 	    {(char *)retrace_version, 32 } };
-	struct msghdr msg = { 0 };
+	struct msghdr msg;
 	struct cmsghdr *cmsg;
 	union {
 		char buf[CMSG_SPACE(sizeof(int))];
@@ -131,6 +131,8 @@ new_rpc_endpoint()
 
 	if (g_sockfd == -1)
 		return -1;
+
+	real_memset(&msg, 0, sizeof(msg));
 	msg.msg_iov = iov;
 	msg.msg_iovlen = 2;
 	msg.msg_control = u.buf;
@@ -162,7 +164,7 @@ new_rpc_endpoint()
 }
 
 int
-#if defined(__OpenBSD__)
+#if defined __OpenBSD__ || defined __FreeBSD__
 rpc_get_sockfd(enum retrace_function_id fid)
 #else
 rpc_get_sockfd()
@@ -176,15 +178,21 @@ rpc_get_sockfd()
 
 	long int fd;
 
-#if defined(__OpenBSD__)
+#if defined __OpenBSD__ || defined __FreeBSD__
 	static int initialised;
 
 	/*
 	 * BSDs pthread_once calls these so tracing them
 	 * before init is complete causes infinite recusion
 	 */
+#ifdef __OpenBSD__
 	if ((fid == RPC_getenv || fid == RPC_malloc || fid == RPC_memset) && initialised == 0)
 		return -1;
+#endif
+#ifdef __FreeBSD__
+	if ((fid == RPC_getenv || fid == RPC_malloc || fid == RPC_memset || fid == RPC_memcpy || fid == RPC_strlen) && initialised == 0)
+		return -1;
+#endif
 
 	pthread_once(&g_once_control, init);
 

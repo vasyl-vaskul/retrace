@@ -198,7 +198,6 @@ display_fflags(struct retrace_endpoint *ep, int flags)
 		{O_CLOEXEC,	"O_CLOEXEC"},
 		{O_CREAT,	"O_CREAT"},
 		{O_DIRECTORY,	"O_DIRECTORY"},
-		{O_DSYNC,	"O_DSYNC"},
 		{O_EXCL,	"O_EXCL"},
 		{O_NOCTTY,	"O_NOCTTY"},
 		{O_NOFOLLOW,	"O_NOFOLLOW"},
@@ -206,18 +205,29 @@ display_fflags(struct retrace_endpoint *ep, int flags)
 		{O_NDELAY,	"O_NDELAY"},
 		{O_SYNC,	"O_SYNC"},
 		{O_TRUNC,	"O_TRUNC"},
-#if (!defined __APPLE__) && (!defined __OpenBSD__)
-		{O_DIRECT,	"O_DIRECT"},
+#if (defined __APPLE__) || (defined __OpenBSD__) || (defined __linux__)
+		{O_DSYNC,	"O_DSYNC"},
+#endif
+#ifdef __linux__
 		{O_LARGEFILE,	"O_LARGEFILE"},
 		{O_NOATIME,	"O_NOATIME"},
 		{O_PATH,	"O_PATH"},
 		{O_TMPFILE,	"O_TMPFILE"},
 #endif
+#if (defined __linux__) || (defined __FreeBSD__)
+		{O_DIRECT,	"O_DIRECT"},
+#endif
 #ifdef __APPLE__
 		{O_EVTONLY,	"O_EVTONLY"},
 		{O_SYMLINK,	"O_SYMLINK"},
 #endif
-#if (defined __APPLE__) || (defined __OpenBSD__)
+#ifdef __FreeBSD__
+		{O_EXEC,	"O_EXEC"},
+		{O_FSYNC,	"O_FSYNC"},
+		{O_TTY_INIT,	"O_TTY_INIT"},
+		{O_VERIFY,	"O_VERIFY"},
+#endif
+#if (defined __APPLE__) || (defined __OpenBSD__) || defined( __FreeBSD__)
 		{O_EXLOCK,	"O_EXLOCK"},
 		{O_SHLOCK,	"O_SHLOCK"},
 #endif

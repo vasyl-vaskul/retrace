@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#if defined(__OpenBSD__)
+#if defined __OpenBSD__ || defined __FreeBSD__
 int rpc_get_sockfd(enum retrace_function_id fid);
 #else
 int rpc_get_sockfd(void);
