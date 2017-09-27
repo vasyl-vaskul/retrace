@@ -60,7 +60,7 @@ set_dirinfo(struct dirinfo_h *infos, pid_t pid, DIR *dir, const char *info)
 		di->dir = dir;
 		di->pid = pid;
 		di->info = (char *)&di[1];
-		strlcpy(di->info, info, infolen);
+		strncpy(di->info, info, infolen);
 		SLIST_INSERT_HEAD(infos, di, next);
 	}
 }
@@ -101,7 +101,7 @@ set_streaminfo(struct streaminfo_h *infos, pid_t pid, FILE *stream,
 		si->stream = stream;
 		si->pid = pid;
 		si->info = (char *)&si[1];
-		strlcpy(si->info, info, infolen);
+		strncpy(si->info, info, infolen);
 		SLIST_INSERT_HEAD(infos, si, next);
 	}
 }
@@ -140,7 +140,7 @@ set_fdinfo(struct fdinfo_h *infos, pid_t pid, int fd,
 		fi->fd = fd;
 		fi->pid = pid;
 		fi->info = (char *)&fi[1];
-		strlcpy(fi->info, info, infolen);
+		strncpy(fi->info, info, infolen);
 		SLIST_INSERT_HEAD(infos, fi, next);
 	}
 }
